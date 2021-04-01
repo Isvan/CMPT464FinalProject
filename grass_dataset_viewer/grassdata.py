@@ -51,18 +51,18 @@ class Tree(object):
 
 
 class GRASSDataset(data.Dataset,):
-    def __init__(self, dir, models_num=0, transform=None):
+    def __init__(self, dir, model_index = 1, transform=None):
         self.dir = dir
         num_examples = len(os.listdir(os.path.join(dir, 'ops')))
         self.transform = transform
         self.trees = []
-        for i in range(models_num):
-            boxes = torch.from_numpy(loadmat(os.path.join(dir, 'boxes', '%d.mat' % (i+1)))['box']).t().float()
-            ops = torch.from_numpy(loadmat(os.path.join(dir, 'ops', '%d.mat' % (i+1)))['op']).int()
-            syms = torch.from_numpy(loadmat(os.path.join(dir, 'syms', '%d.mat' % (i+1)))['sym']).t().float()
-            labels = torch.from_numpy(loadmat(os.path.join(dir, 'labels', '%d.mat' % (i+1)))['label']).int()
-            tree = Tree(boxes, ops, syms, labels)
-            self.trees.append(tree)
+        boxes = torch.from_numpy(loadmat(os.path.join(dir, 'boxes', '%d.mat' % (model_index)))['box']).t().float()
+        ops = torch.from_numpy(loadmat(os.path.join(dir, 'ops', '%d.mat' % (model_index)))['op']).int()
+        syms = torch.from_numpy(loadmat(os.path.join(dir, 'syms', '%d.mat' % (model_index)))['sym']).t().float()
+        labels = torch.from_numpy(loadmat(os.path.join(dir, 'labels', '%d.mat' % (model_index)))['label']).int()
+        tree = Tree(boxes, ops, syms, labels)
+        self.trees.append(tree)
+            
 
     def __getitem__(self, index):
         tree = self.trees[index]
