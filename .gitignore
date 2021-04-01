@@ -1,0 +1,9 @@
+# Project-specific folders
+grass_dataset_viewer/chair
+grass_dataset_viewer/virtual_env
+
+# Package Files
+*.zip
+
+# Bash
+*.sh
