@@ -2,10 +2,10 @@
 
 ## Roles
 
-- Iavor: ML classificator
-- Maheep: dataset parsing and data construction
-- Greg: mesh correspondence and deformation
-- Vlad: mesh correspondence and deformation
+- **Iavor**: ML classificator
+- **Maheep**: dataset parsing and data construction
+- **Greg**: mesh correspondence and deformation
+- **Vlad**: mesh correspondence and deformation
 
 ## Team information
 
@@ -26,14 +26,16 @@
 - Process the new part (deform, grow, scale, etc.) to make sure the chair is connected and coherent.
 - Create several chairs like these and rank them by using our scoring mechanism.
 
-## Assignments/Tasks
+## Deliverables
 
-### Scorer (Iavor)
+### Dataset viewer (April 7th)
 
-- Input: .obj
-- Output: normalized score, 0-1
-- In the end we will just integrate the trained model
-- Convert meshes to voxel / SDF representation for analysis
+- First milestone, this will require several other parts in the works
+- Basic UX: "explore" the dataset, able to choose any provided mesh, able to look at the mesh and then look at each of the particular parts constituting the mesh
+- Basic UI: one set of arrows to move between the meshes and another set of arrows to move between the parts in a particular mesh (or anything else simple and effective)
+- Requires mesh-parts association which in turn requires dataset processing
+
+## Assignments/Tasks (in priority)
 
 ### Dataset parsing and preparation (Maheep)
 
@@ -41,6 +43,12 @@
 - Output: one big `.json` containing information about each mesh from the dataset
 - Each mesh entry would have information from `/syms`, `/boxes`, etc. clapmed together in one spot
 - For our project, we will need that `.json` and list of all `.obj`'s to do everything else
+
+### Mesh data structure and mesh part generation (Maheep & Team)
+
+- Input: the big `.json` and the `.obj`'s (basically our transformed dataset)
+- Output: Generate parts `.objs` based on the dataset entry.
+- Make sense of `.json` and construct representations which can be usable later on (e.g. here is a mesh and here is its parts, each part is labeled)
 
 ### Mesh correspondence and deformation (Vlad & Greg)
 
@@ -51,12 +59,13 @@
 - MVP: find rigid transform
 - Refined version: find non-rigid deformation
 
-### Mesh data structure and mesh part generation (Not assigned)
+### Scorer (Iavor)
 
-- Input: the big `.json` and the `.obj`'s (basically our transformed dataset)
-- Output: Generate parts `.objs` based on the dataset entry.
-- Make sense of `.json` and construct representations which can be usable later on (e.g. here is a mesh and here is its parts, each part is labeled)
+- Input: .obj
+- Output: normalized score, 0-1
+- In the end we will just integrate the trained model
+- Convert meshes to voxel / SDF representation for analysis
 
 ## Ideas/Suggestions
 
-- Probably need to set up a separate meeting with the TA
+- Probably need to set up a separate meeting with the Wallace to check in on the project
