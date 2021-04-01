@@ -116,5 +116,5 @@ if __name__ == "__main__":
     meshIndex = int(sys.argv[1])
     grassdata = GRASSDataset('chair',meshIndex)
     boxes = decode_structure(grassdata[0].root)
-    showGenshape(boxes)
+    showGenshape(boxes, meshIndex, grassdata.shapeNumber)
        

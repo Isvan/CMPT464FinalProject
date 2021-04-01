@@ -62,6 +62,10 @@ class GRASSDataset(data.Dataset,):
         labels = torch.from_numpy(loadmat(os.path.join(dir, 'labels', '%d.mat' % (model_index)))['label']).int()
         tree = Tree(boxes, ops, syms, labels)
         self.trees.append(tree)
+
+        # Store shape number to easily correspond the mesh
+        shapeNum = int(loadmat(os.path.join(dir, 'syms', '%d.mat' % (model_index)))['shapename'])
+        self.shapeNumber = shapeNum
             
 
     def __getitem__(self, index):

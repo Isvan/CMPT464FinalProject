@@ -93,10 +93,11 @@ def showGenshapes(genshapes):
 
         plt.show()
 
-def showGenshape(genshape):
+def showGenshape(genshape, meshIndex, shapeNumber):
     recover_boxes = genshape
 
     fig = plt.figure(0)
+    fig.suptitle(str(meshIndex)+'.mat - '+str(shapeNumber)+'.obj')
     cmap = plt.get_cmap('jet_r')
     ax = Axes3D(fig)
     ax.set_xlim(-0.7, 0.7)
