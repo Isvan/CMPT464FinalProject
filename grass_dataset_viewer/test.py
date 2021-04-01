@@ -3,7 +3,6 @@ from draw3dobb import showGenshape
 import torch
 from grassdata import GRASSDataset
 import math
-import sys
 
 def vrrotvec2mat(rotvector):
     s = math.sin(rotvector[3])
@@ -113,8 +112,7 @@ def decode_structure(root):
     return boxes
 
 if __name__ == "__main__":
-    meshIndex = int(sys.argv[1])
-    grassdata = GRASSDataset('chair',meshIndex)
-    boxes = decode_structure(grassdata[0].root)
-    showGenshape(boxes)
-       
+    grassdata = GRASSDataset('chair',3)
+    for i in range(len(grassdata)):
+        boxes = decode_structure(grassdata[i].root)
+        showGenshape(boxes)
