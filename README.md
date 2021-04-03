@@ -17,7 +17,7 @@
 - **April 7th** - Have dataset viewer ready to go
 - **April 14th** - Crude and basic parts replacement, no scorer
 - **April 21th** - Refined parts replacement, scorer to sort the models
-- **April 26th, 12:30 pm ** - Project defense and submission (submission deadline is at 11:45 pm).
+- **April 26th, 12:30 pm** - Project defense and submission (submission deadline is at 11:45 pm).
 
 ## General Project Idea
 
