@@ -11,13 +11,13 @@
 
 - General Project Meeting - every Wednesday, 7:00 pm - 8:30 pm
 
-## Timeline 
+## Timeline (2021)
 
-- **March 31, 2021** - Project Inception
+- **March 31st** - Project Inception
 - **April 7th** - Have dataset viewer ready to go
 - **April 14th** - Crude and basic parts replacement, no scorer
 - **April 21th** - Refined parts replacement, scorer to sort the models
-- **April 23rd (assuming the worst)** - Project defense and submission.
+- **April 26th, 12:30 pm** - Project defense and submission (submission deadline is at 11:45 pm).
 
 ## General Project Idea
 
