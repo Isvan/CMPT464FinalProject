@@ -117,4 +117,3 @@ if __name__ == "__main__":
     grassdata = GRASSDataset('chair',meshIndex)
     boxes = decode_structure(grassdata[0].root)
     showGenshape(boxes, meshIndex, grassdata.shapeNumber)
-       

@@ -56,17 +56,17 @@ class GRASSDataset(data.Dataset,):
         num_examples = len(os.listdir(os.path.join(dir, 'ops')))
         self.transform = transform
         self.trees = []
-        boxes = torch.from_numpy(loadmat(os.path.join(dir, 'boxes', '%d.mat' % (model_index)))['box']).t().float()
-        ops = torch.from_numpy(loadmat(os.path.join(dir, 'ops', '%d.mat' % (model_index)))['op']).int()
-        syms = torch.from_numpy(loadmat(os.path.join(dir, 'syms', '%d.mat' % (model_index)))['sym']).t().float()
-        labels = torch.from_numpy(loadmat(os.path.join(dir, 'labels', '%d.mat' % (model_index)))['label']).int()
-        tree = Tree(boxes, ops, syms, labels)
+        self.boxes = torch.from_numpy(loadmat(os.path.join(dir, 'boxes', '%d.mat' % (model_index)))['box']).t().float()
+        self.ops = torch.from_numpy(loadmat(os.path.join(dir, 'ops', '%d.mat' % (model_index)))['op']).int()
+        self.syms = torch.from_numpy(loadmat(os.path.join(dir, 'syms', '%d.mat' % (model_index)))['sym']).t().float()
+        self.labels = torch.from_numpy(loadmat(os.path.join(dir, 'labels', '%d.mat' % (model_index)))['label']).int()
+        tree = Tree(self.boxes, self.ops, self.syms, self.labels)
         self.trees.append(tree)
 
         # Store shape number to easily correspond the mesh
         shapeNum = int(loadmat(os.path.join(dir, 'syms', '%d.mat' % (model_index)))['shapename'])
         self.shapeNumber = shapeNum
-            
+
 
     def __getitem__(self, index):
         tree = self.trees[index]
