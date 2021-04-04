@@ -123,6 +123,9 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("please run with model number (example: \"viewModel.py 172\")")
     if len(sys.argv) < 3:
         sys.argv.append('False')
-    main(sys.argv[1:])
+    if len(sys.argv) == 3:
+        main(sys.argv[1:])
