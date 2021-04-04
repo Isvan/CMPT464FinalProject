@@ -127,6 +127,6 @@ if __name__ == "__main__":
         grassdata = GRASSDataset('chair', i)
         total_data.append(createJSON(grassdata, i))
 
-    with open("Compiled-data/test.json", "w") as outfile:
-        for i in range(len(total_data)):
+    for i in range(len(total_data)):
+        with open("Compiled-data/"+ str(i + 1) + ".json", "w") as outfile:
             outfile.write(total_data[i])
