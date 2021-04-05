@@ -109,23 +109,32 @@ def decode_structure(root):
             boxes.extend(reBoxes)
     return boxes
 
-def createJSON(grassdata: GRASSDataset, i: int) -> str:
+def createJSON(grassdata: GRASSDataset, i: int, obbData: str) -> str:
     data = {
     "boxes": grassdata.boxes.numpy().tolist(),
     "ops": grassdata.ops.numpy().tolist(),
     "syms": grassdata.syms.numpy().tolist(),
     "labels:": grassdata.labels.numpy().tolist(),
     "obj": grassdata.shapeNumber,
-    "mat_index": i
+    "mat_index": i,
+    "obbs": obbData
     }
     json_obj = json.dumps(data, indent = 4)
     return json_obj
+
+def readObb(fileNum: int) -> str:
+    path = "Chair/obbs/" + str(fileNum) + ".obb"
+    with open(path, 'r') as file:
+        data = file.read()
+    # print(data)
+    return data
 
 if __name__ == "__main__":
     total_data = []
     for i in range(1, 6202):
         grassdata = GRASSDataset('chair', i)
-        total_data.append(createJSON(grassdata, i))
+        obb = readObb(grassdata.shapeNumber)
+        total_data.append(createJSON(grassdata, i, obb))
 
     for i in range(len(total_data)):
         with open("Compiled-data/"+ str(i + 1) + ".json", "w") as outfile:
