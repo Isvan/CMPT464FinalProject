@@ -25,6 +25,13 @@ def getDatasetObjParts(objIndex):
 
     f = open(dataset_path + 'models/'+modelNum+'.obj')
     partPath = dataset_path + 'models/parts/'
+
+    try:
+        mkdir(partPath)
+        print("created directory for all parts")
+    except:
+        print("parts directory exists")
+
     try:
         mkdir(partPath+modelNum)
         print("created directory for parts of chair"+modelNum)
