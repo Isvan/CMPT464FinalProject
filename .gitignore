@@ -2,6 +2,7 @@
 grass_dataset_viewer/chair
 grass_dataset_viewer/virtual_env
 grass_dataset_viewer/__pycache__
+grass-master/
 virtual
 
 # Package Files
