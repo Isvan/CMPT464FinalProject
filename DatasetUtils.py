@@ -18,6 +18,7 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r'(\d+)', text)]
 
 # index here is an .obj index and NOT the actual dataset index
+# output has an array of pyrender.Mesh objects (parts)
 def getDatasetObjParts(objIndex):
     dataset_path = 'grass_dataset_viewer/chair/'
     modelNum = str(objIndex)
