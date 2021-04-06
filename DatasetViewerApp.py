@@ -5,7 +5,7 @@ import ModelPartsViewer as mpv
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Please run with .obj numbers (example: \"DatasetViewerApp.py 1997 2110 2121\")")
+        print("Please run with dataset indices (1-6201) (example: \"DatasetViewerApp.py 1 2 3\")")
     else:
         datasetIndices = sys.argv[1:]
         models = []
