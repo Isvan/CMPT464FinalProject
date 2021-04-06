@@ -77,7 +77,7 @@ def getDatasetObjParts(objIndex):
 
                 partF.write(chair_part_obs[pind])
                 numv += ob.count('v')
-                partF.close
+                partF.close()
                 i += 1
             except:
                 j += 1
