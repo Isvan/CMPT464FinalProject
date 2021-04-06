@@ -1,3 +1,4 @@
+import json
 import numpy as np
 from os import listdir, mkdir
 import pyrender
@@ -17,9 +18,9 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r'(\d+)', text)]
 
 # index here is an .obj index and NOT the actual dataset index
-def getDatasetMeshParts(index):
+def getDatasetObjParts(objIndex):
     dataset_path = 'grass_dataset_viewer/chair/'
-    chairnums = [str(index)]
+    chairnums = [str(objIndex)]
     for modelNum in chairnums:
         f = open(dataset_path + 'models/'+modelNum+'.obj')
         partPath = dataset_path + 'models/parts/'
@@ -96,3 +97,8 @@ def getDatasetMeshParts(index):
 
     return parts
 
+def getDatasetMeshObjIndex(datasetIndex):
+    meshData = open('grass_dataset_viewer/Compiled-data/'+datasetIndex+'.json')
+    meshJsonString = meshData.read()
+    meshJson = json.loads(meshJsonString)
+    return int(meshJson['obj'])
