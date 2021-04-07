@@ -10,11 +10,9 @@ if __name__ == "__main__":
         datasetIndices = sys.argv[1:]
         models = []
         for index in datasetIndices:
-            objIndex = dt.getDatasetMeshObjIndex(index)
-            parts = dt.getDatasetObjParts(objIndex)
+            #objIndex = dt.getDatasetMeshObjIndex(index)
+            parts = dt.getDatasetObjParts(index)
             models.append(mpv.Model(parts))
 
         mpv.setModels(models)
         mpv.start()
-        
-
