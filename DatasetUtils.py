@@ -23,8 +23,8 @@ def natural_keys(text):
 
 
 def getDatasetObjParts(datasetIndex):
-    json_data_path = 'grass_dataset_viewer/Compiled-data/'
-    dataset_path = 'grass_dataset_viewer/chair/'
+    json_data_path = 'dataset/compiled/'
+    dataset_path = 'dataset/Chair/'
 
     with open(json_data_path+str(datasetIndex)+'.json') as jsonFile:
         try:

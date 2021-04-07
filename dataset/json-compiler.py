@@ -1,5 +1,4 @@
 import numpy as np
-from draw3dobb import showGenshape
 import torch
 from grassdata import GRASSDataset
 import math
@@ -7,8 +6,8 @@ import sys
 import json
 
 """
-This file needs to be placed outside of teh Chair directory, such that it can access it using Chair/*.
-Create a folder called Compiled-data, where it will place all the data
+This file needs to be placed outside of the Chair directory, such that it can access it using Chair/*.
+Create a folder called "compiled", where it will place all the data
 """
 
 def vrrotvec2mat(rotvector):
@@ -137,5 +136,5 @@ if __name__ == "__main__":
         total_data.append(createJSON(grassdata, i, obb))
 
     for i in range(len(total_data)):
-        with open("Compiled-data/"+ str(i + 1) + ".json", "w") as outfile:
+        with open("compiled/"+ str(i + 1) + ".json", "w") as outfile:
             outfile.write(total_data[i])
