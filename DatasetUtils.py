@@ -5,6 +5,7 @@ import pyrender
 import re
 import trimesh
 
+
 def atoi(text):
     return int(text) if text.isdigit() else text
 
@@ -19,9 +20,19 @@ def natural_keys(text):
 
 # index here is an .obj index and NOT the actual dataset index
 # output has an array of pyrender.Mesh objects (parts)
-def getDatasetObjParts(objIndex):
+
+
+def getDatasetObjParts(datasetIndex):
+    json_data_path = 'grass_dataset_viewer/Compiled-data/'
     dataset_path = 'grass_dataset_viewer/chair/'
-    modelNum = str(objIndex)
+
+    with open(json_data_path+str(datasetIndex)+'.json') as jsonFile:
+        try:
+            obJson = json.load(jsonFile)
+        except:
+            print("error opening json file")
+
+    modelNum = str(obJson['obj'])
 
     f = open(dataset_path + 'models/'+modelNum+'.obj')
     partPath = dataset_path + 'models/parts/'
@@ -55,12 +66,13 @@ def getDatasetObjParts(objIndex):
         labelFile = open(partPath+modelNum+'/label.txt')
         obbfText = labelFile.read()
     except:
-        obbf = open(dataset_path + 'obbs/'+modelNum+'.obb')
-        obbfText = obbf.read()
+        #obbf = open(dataset_path + 'obbs/'+modelNum+'.obb')
+        #obbfText = obbf.read()
+        obbfText = obJson['obbs']
         obbfText = re.split('L [0-9]*\n', obbfText)[1]
         labelFile = open(partPath+modelNum+'/label.txt', 'x')
         labelFile.write(obbfText)
-        obbf.close()
+        # obbf.close()
 
     obbfText = map(int, obbfText.split('\n'))
     plabels = [pi for pi in obbfText]
@@ -104,6 +116,7 @@ def getDatasetObjParts(objIndex):
                 thisTri, smooth=False))
 
     return parts
+
 
 def getDatasetMeshObjIndex(datasetIndex):
     meshData = open('grass_dataset_viewer/Compiled-data/'+datasetIndex+'.json')
