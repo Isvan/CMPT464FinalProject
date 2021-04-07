@@ -1,5 +1,6 @@
 import copy
 import pyrender
+import random
 
 
 class Model:
@@ -11,6 +12,7 @@ class Model:
 class ModelPartsViewer:
     def __init__(self):
         self.models = []
+        self.collections = {}
         self.renderMode = 0
         self.viewerModelIndex = 0
 
@@ -32,21 +34,21 @@ def setSceneMeshes(viewer, meshes):
 
     viewer.render_lock.release()
 
+def setModelIndex(viewer, index):
+    modelPartsViewer.viewerModelIndex = index
+    modelPartsViewer.renderMode = 0
+    allModelParts = modelPartsViewer.models[index].parts
+    setSceneMeshes(viewer, allModelParts)
+
 
 def viewNextModel(viewer):
-    modelPartsViewer.viewerModelIndex = (
-        modelPartsViewer.viewerModelIndex+1) % len(modelPartsViewer.models)
-    modelPartsViewer.renderMode = 0
-    allModelParts = modelPartsViewer.models[modelPartsViewer.viewerModelIndex].parts
-    setSceneMeshes(viewer, allModelParts)
+    nextIndex = (modelPartsViewer.viewerModelIndex+1) % len(modelPartsViewer.models)
+    setModelIndex(viewer, nextIndex)
 
 
 def viewPrevModel(viewer):
-    modelPartsViewer.viewerModelIndex = (
-        modelPartsViewer.viewerModelIndex-1) % len(modelPartsViewer.models)
-    modelPartsViewer.renderMode = 0
-    allModelParts = modelPartsViewer.models[modelPartsViewer.viewerModelIndex].parts
-    setSceneMeshes(viewer, allModelParts)
+    prevIndex = (modelPartsViewer.viewerModelIndex-1) % len(modelPartsViewer.models)
+    setModelIndex(viewer, prevIndex)
 
 
 def viewNextPart(viewer):
@@ -78,9 +80,43 @@ def viewPrevPart(viewer):
     else:
         setSceneMeshes(viewer, [model.parts[partToView]])
 
+def getRandomCollectionPart(partType):
+    collectionSize = len(modelPartsViewer.collections[partType])
+    if collectionSize == 0:
+        return None
+
+    randomIndex = int(random.randrange(0, collectionSize))
+    mesh = modelPartsViewer.collections[partType][randomIndex]
+    return mesh
+
+def generateChair(viewer):
+    # get random back, random seat, random leg, random arm rest
+    backPartMesh = getRandomCollectionPart('back')
+    seatPartMesh = getRandomCollectionPart('seat')
+    legPartMesh = getRandomCollectionPart('leg')
+    armRestPartMesh = getRandomCollectionPart('arm rest')
+
+    parts = []
+    if backPartMesh != None:
+        parts.append(backPartMesh)
+    if seatPartMesh != None:
+        parts.append(seatPartMesh)
+    if legPartMesh != None:
+        parts.append(legPartMesh)
+    if armRestPartMesh != None:
+        parts.append(armRestPartMesh)
+
+    generatedChairModel = Model(parts)
+    modelPartsViewer.models.append(generatedChairModel)
+
+    setModelIndex(viewer, len(modelPartsViewer.models)-1)
+
 
 def setModels(models):
     modelPartsViewer.models = copy.deepcopy(models)
+
+def setCollections(collections):
+    modelPartsViewer.collections = copy.deepcopy(collections)
 
 
 def start():
@@ -93,4 +129,4 @@ def start():
         defaultScene.add(part)
 
     pyrender.Viewer(defaultScene, registered_keys={
-                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart}, use_raymond_lighting=True)
+                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair}, use_raymond_lighting=True)

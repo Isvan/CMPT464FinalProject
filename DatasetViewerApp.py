@@ -9,10 +9,21 @@ if __name__ == "__main__":
     else:
         datasetIndices = sys.argv[1:]
         models = []
+        collections = {'back': [], 'seat':[], 'leg': [], 'arm rest': []}
         for index in datasetIndices:
-            #objIndex = dt.getDatasetMeshObjIndex(index)
-            parts = dt.getDatasetObjParts(index)
-            models.append(mpv.Model(parts))
+            partsTuples = dt.getDatasetObjParts(index)
+            modelParts = []
 
+            # partTuple[0] holds mesh
+            # partTuple[1] holds label
+            for partTuple in partsTuples:
+                modelParts.append(partTuple[0])
+                collections[partTuple[1]].append(partTuple[0])
+
+            models.append(mpv.Model(modelParts))
+
+        # models now have full formed models
+        # collections now have part meshes
+        mpv.setCollections(collections)
         mpv.setModels(models)
         mpv.start()

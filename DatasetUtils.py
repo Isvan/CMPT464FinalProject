@@ -56,6 +56,13 @@ def getDatasetObjParts(datasetIndex):
         3: '3737d0',  # arm rest
     }
 
+    part_labels = {
+        0: 'back',
+        1: 'seat',
+        2: 'leg',
+        3: 'arm rest'
+    }
+
     chairObj = f.read()
     chair_part_obs = re.split('g \d+', chairObj)
     chair_part_obs.pop(0)
@@ -109,11 +116,14 @@ def getDatasetObjParts(datasetIndex):
     sorted_names.sort(key=natural_keys)
     for iter, filename in enumerate(sorted_names):
         if filename.endswith(".obj"):
-            thisTri = trimesh.load(partPath+modelNum+'/'+filename)
-            thisTri.visual.face_colors = np.full(
-                shape=[thisTri.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors.get(plabels[iter])))
-            parts.append(pyrender.Mesh.from_trimesh(
-                thisTri, smooth=False))
+            partTri = trimesh.load(partPath+modelNum+'/'+filename)
+            partLabel = part_labels.get(plabels[iter])
+
+            partTri.visual.face_colors = np.full(
+                shape=[partTri.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors.get(plabels[iter])))
+
+            partMesh = pyrender.Mesh.from_trimesh(partTri, smooth=False)
+            parts.append((partMesh, partLabel))
 
     return parts
 
