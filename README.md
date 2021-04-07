@@ -1,5 +1,18 @@
 # CMPT 464 Final Project
 
+# Technical details
+
+## Project Directory Structure
+
+- `dataset/Chair` is the dataset folder that you need to place there yourself. Make sure that it's called exactly "Chair" and has `ops/ syms/` etc. folders within
+- You can place your virtual environment into "virtual*" folder, where star means anything goes. All folders starting with "virtual" are ignored across the project.
+
+## Guides
+
+- To re-generate the `dataset/compiled` folder, ensure that there is `dataset/Chair` folder with all the dataset data within and run `dataset/json-compile.py` from within `dataset` folder.
+
+# Non-technical details
+
 ## Roles
 
 - **Iavor**: ML classificator
