@@ -95,6 +95,33 @@ def getRandomCollectionPart(partType):
     mesh = modelPartsViewer.collections[partType][randomIndex]
     return copy.deepcopy(mesh)
 
+def partExistsInCollection(part, label):
+    for collectionPart in modelPartsViewer.collections[label]:
+        if part.name == collectionPart.name:
+            return True
+    return False
+
+def getPartLabel(part):
+    if partExistsInCollection(part, 'back'):
+        return 'back'
+    if partExistsInCollection(part, 'seat'):
+        return 'seat'
+    if partExistsInCollection(part, 'leg'):
+        return 'leg'
+    if partExistsInCollection(part, 'arm rest'):
+        return 'arm rest'
+
+    return None
+
+def getModelPartByLabel(model, label):
+    for part in model.parts:
+        for collectionPart in modelPartsViewer.collections[label]:
+            if part.name == collectionPart.name:
+                return copy.deepcopy(collectionPart)
+                
+    return None
+
+
 ############################ API END
 
 def generateChair(viewer):
@@ -117,27 +144,55 @@ def generateChair(viewer):
     showNewModelFromParts(viewer, parts)
 
 def testFeature(viewer):
+    # models contain all input chair models, each has .parts field with all available parts
+    models = modelPartsViewer.models
+
     # collections['back'] contain all of back parts as pyrender.Mesh objects
     collections = modelPartsViewer.collections
 
-    # getRandomCollectionPart('back') can be used to retrieve a random mesh.
+    # Test task: let's take the seat of the currently displayed chair, replace all the legs and take some random back.
+
+    # getModelPartByLabel(model, 'seat') can be used to get the seat part from the given model
+    # altering the mesh does not lead to altering of the model
+    # type: pyrender.Mesh 
+    currentModel = models[modelPartsViewer.viewerModelIndex]
+    currentModelSeatMesh = getModelPartByLabel(currentModel, 'seat')
+
+    # getRandomCollectionPart('back') can be used to retrieve a random mesh from the collection.
     # altering the mesh does not lead to altering of the collection
     # type: pyrender.Mesh 
     randomBackMesh = getRandomCollectionPart('back')
 
-    # each mesh contains primitives and each primitive is our more familiar "mesh" with vertices, normals, etc.
+    # each mesh contains primitives (pyrender.Primitive) and each primitive is our more familiar "mesh" with vertices, normals, etc.
     # usually mesh would have just one primitive (itself)
+    # let's alter the back slightly
     for primitive in randomBackMesh.primitives:
         for pos in primitive.positions:
             randomVector = pUtils.randomUnitVector() * 0.02
             pos+=randomVector
 
-    # just use this one as is for demo purposes
-    randomSeatMesh = getRandomCollectionPart('seat')
+    # now let's replace all the chair legs
+    legToReplaceWith = getRandomCollectionPart('leg')
+    newLegs = []
+    for part in currentModel.parts:
+        if getPartLabel(part) != 'leg':
+            continue
+        
+        # if it's a leg, then translate all the vertices from one centroid to another
+        newLeg = copy.deepcopy(legToReplaceWith)
+        pUtils.translateMeshAToB(newLeg, part)
+        newLegs.append(newLeg)
+
+    # combine all the parts
+    resultParts = []
+    resultParts.append(randomBackMesh)
+    resultParts.append(currentModelSeatMesh)
+    for leg in newLegs:
+        resultParts.append(leg)
 
     # show the new model made out of all parts we need
     # it will appear on the screen and will be appended to the end of the viewable collection
-    showNewModelFromParts(viewer, [randomBackMesh, randomSeatMesh])
+    showNewModelFromParts(viewer, resultParts)
 
 def start():
     modelPartsViewer.renderMode = 0
