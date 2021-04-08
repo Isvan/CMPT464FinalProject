@@ -14,11 +14,14 @@ if __name__ == "__main__":
             partsTuples = dt.getDatasetObjParts(index)
             modelParts = []
 
-            # partTuple[0] holds mesh
-            # partTuple[1] holds label
             for partTuple in partsTuples:
-                modelParts.append(partTuple[0])
-                collections[partTuple[1]].append(partTuple[0])
+                partMesh = partTuple[0]
+                partLabel = partTuple[1]
+
+                # naming is important because we will match parts later
+                partMesh.name = str(index)+'_'+partLabel
+                modelParts.append(partMesh)
+                collections[partLabel].append(partMesh)
 
             models.append(mpv.Model(modelParts))
 
