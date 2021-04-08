@@ -4,6 +4,13 @@ virtual*
 dataset/__pycache__
 dataset/Chair
 
+#ML Stuff
+*.bmp
+*.png
+
+ML/baseML/checkpoint**
+ML/ourML/checkpoint**
+
 # Package Files
 *.zip
 
