@@ -1,7 +1,7 @@
 import copy
+import ProjectUtils as pUtils
 import pyrender
 import random
-
 
 class Model:
     # parts are an array of type pyrender.Mesh
@@ -19,6 +19,11 @@ class ModelPartsViewer:
 
 modelPartsViewer = ModelPartsViewer()
 
+def setModels(models):
+    modelPartsViewer.models = copy.deepcopy(models)
+
+def setCollections(collections):
+    modelPartsViewer.collections = copy.deepcopy(collections)
 
 def setSceneMeshes(viewer, meshes):
     viewer.render_lock.acquire()
@@ -40,6 +45,20 @@ def setModelIndex(viewer, index):
     allModelParts = modelPartsViewer.models[index].parts
     setSceneMeshes(viewer, allModelParts)
 
+def setRenderModeIndex(viewer, model, renderModeIndex):
+    modelPartsViewer.renderMode = renderModeIndex
+
+    partToView = renderModeIndex - 1
+    if partToView == -1:
+        setSceneMeshes(viewer, model.parts)
+    else:
+        setSceneMeshes(viewer, [model.parts[partToView]])
+
+def showNewModelFromParts(viewer, parts):
+    generatedChairModel = Model(parts)
+    modelPartsViewer.models.append(generatedChairModel)
+    setModelIndex(viewer, len(modelPartsViewer.models)-1)
+
 
 def viewNextModel(viewer):
     nextIndex = (modelPartsViewer.viewerModelIndex+1) % len(modelPartsViewer.models)
@@ -53,32 +72,19 @@ def viewPrevModel(viewer):
 
 def viewNextPart(viewer):
     model = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
-    totalPartsCount = len(model.parts)
 
-    # total of partsCount+1 modes of display
-    modelPartsViewer.renderMode = (
-        modelPartsViewer.renderMode + 1) % (totalPartsCount + 1)
-
-    partToView = modelPartsViewer.renderMode - 1
-    if partToView == -1:
-        setSceneMeshes(viewer, model.parts)
-    else:
-        setSceneMeshes(viewer, [model.parts[partToView]])
-
+    # total of partsCount+1 modes of display, including "full" view and one for each part
+    renderModesCount = len(model.parts) + 1
+    nextPartIndex = (modelPartsViewer.renderMode + 1) % renderModesCount
+    setRenderModeIndex(viewer, model, nextPartIndex)
 
 def viewPrevPart(viewer):
     model = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
-    totalPartsCount = len(model.parts)
 
-    # total of partsCount+1 modes of display
-    modelPartsViewer.renderMode = (
-        modelPartsViewer.renderMode - 1) % (totalPartsCount + 1)
-
-    partToView = modelPartsViewer.renderMode - 1
-    if partToView == -1:
-        setSceneMeshes(viewer, model.parts)
-    else:
-        setSceneMeshes(viewer, [model.parts[partToView]])
+    # total of partsCount+1 modes of display, including "full" view and one for each part
+    renderModesCount = len(model.parts) + 1
+    nextPartIndex = (modelPartsViewer.renderMode - 1) % renderModesCount
+    setRenderModeIndex(viewer, model, nextPartIndex)
 
 def getRandomCollectionPart(partType):
     collectionSize = len(modelPartsViewer.collections[partType])
@@ -87,7 +93,9 @@ def getRandomCollectionPart(partType):
 
     randomIndex = int(random.randrange(0, collectionSize))
     mesh = modelPartsViewer.collections[partType][randomIndex]
-    return mesh
+    return copy.deepcopy(mesh)
+
+############################ API END
 
 def generateChair(viewer):
     # get random back, random seat, random leg, random arm rest
@@ -106,18 +114,30 @@ def generateChair(viewer):
     if armRestPartMesh != None:
         parts.append(armRestPartMesh)
 
-    generatedChairModel = Model(parts)
-    modelPartsViewer.models.append(generatedChairModel)
+    showNewModelFromParts(viewer, parts)
 
-    setModelIndex(viewer, len(modelPartsViewer.models)-1)
+def testFeature(viewer):
+    # collections['back'] contain all of back parts as pyrender.Mesh objects
+    collections = modelPartsViewer.collections
 
+    # getRandomCollectionPart('back') can be used to retrieve a random mesh.
+    # altering the mesh does not lead to altering of the collection
+    # type: pyrender.Mesh 
+    randomBackMesh = getRandomCollectionPart('back')
 
-def setModels(models):
-    modelPartsViewer.models = copy.deepcopy(models)
+    # each mesh contains primitives and each primitive is our more familiar "mesh" with vertices, normals, etc.
+    # usually mesh would have just one primitive (itself)
+    for primitive in randomBackMesh.primitives:
+        for pos in primitive.positions:
+            randomVector = pUtils.randomUnitVector() * 0.02
+            pos+=randomVector
 
-def setCollections(collections):
-    modelPartsViewer.collections = copy.deepcopy(collections)
+    # just use this one as is for demo purposes
+    randomSeatMesh = getRandomCollectionPart('seat')
 
+    # show the new model made out of all parts we need
+    # it will appear on the screen and will be appended to the end of the viewable collection
+    showNewModelFromParts(viewer, [randomBackMesh, randomSeatMesh])
 
 def start():
     modelPartsViewer.renderMode = 0
@@ -129,4 +149,4 @@ def start():
         defaultScene.add(part)
 
     pyrender.Viewer(defaultScene, registered_keys={
-                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair}, use_raymond_lighting=True)
+                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 't': testFeature}, use_raymond_lighting=True)
