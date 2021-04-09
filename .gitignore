@@ -16,3 +16,7 @@ ML/ourML/checkpoint**
 
 # Bash
 *.sh
+*.mat
+*.obj
+*.txt
+*.obb

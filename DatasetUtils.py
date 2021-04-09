@@ -4,6 +4,7 @@ from os import listdir, mkdir
 import pyrender
 import re
 import trimesh
+from io import StringIO
 
 
 def atoi(text):
@@ -41,19 +42,21 @@ def getDatasetObjParts(datasetIndex):
         mkdir(partPath)
         print("created directory for all parts")
     except:
-        print("parts directory exists")
+        #print("parts directory exists")
+        i = 0
 
     try:
         mkdir(partPath+modelNum)
         print("created directory for parts of chair"+modelNum)
     except:
-        print("directory for "+modelNum+" exists")
+        #print("directory for "+modelNum+" exists")
+        i = 0
 
     part_colors = {
-        0: 'd1310a',  # back
-        1: 'f3c701',  # seat
-        2: '19d625',  # leg
-        3: '3737d0',  # arm rest
+        'back': 'd1310a',  # back
+        'seat': 'f3c701',  # seat
+        'leg': '19d625',  # leg
+        'arm rest': '3737d0',  # arm rest
     }
 
     part_labels = {
@@ -73,8 +76,8 @@ def getDatasetObjParts(datasetIndex):
         labelFile = open(partPath+modelNum+'/label.txt')
         obbfText = labelFile.read()
     except:
-        #obbf = open(dataset_path + 'obbs/'+modelNum+'.obb')
-        #obbfText = obbf.read()
+        # obbf = open(dataset_path + 'obbs/'+modelNum+'.obb')
+        # obbfText = obbf.read()
         obbfText = obJson['obbs']
         obbfText = re.split('L [0-9]*\n', obbfText)[1]
         labelFile = open(partPath+modelNum+'/label.txt', 'x')
@@ -114,16 +117,53 @@ def getDatasetObjParts(datasetIndex):
 
     sorted_names = listdir(partPath+modelNum+'/')
     sorted_names.sort(key=natural_keys)
+    chairParts = {'back': {'text': "", 'vcount': 0}, 'seat': {'text': "", 'vcount': 0}, 'leg': {
+        'text': "", 'vcount': 0}, 'arm rest': {'text': "", 'vcount': 0}}
+    # for iter, filename in enumerate(sorted_names):
+    #     if filename.endswith(".obj"):
+    #         partTri = trimesh.load(partPath+modelNum+'/'+filename)
+    #         trimesh.repair.fix_normals(partTri, multibody=False)
+    #         partLabel = part_labels.get(plabels[iter])
+
+    #         partTri.visual.face_colors = np.full(
+    #             shape=[partTri.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors.get(plabels[iter])))
+
+    #         partMesh = pyrender.Mesh.from_trimesh(partTri, smooth=False)
+
+    #         parts.append((partMesh, partLabel))
     for iter, filename in enumerate(sorted_names):
         if filename.endswith(".obj"):
-            partTri = trimesh.load(partPath+modelNum+'/'+filename)
+            pfile = open(partPath+modelNum+'/'+filename)
             partLabel = part_labels.get(plabels[iter])
+            lines = pfile.read().split('\n')
+            for lineind, line in enumerate(lines):
+                if(len(line) > 0):
+                    if(line.count('f') > 0):
+                        subline = line.split(' ')
+                        for index, part in enumerate(subline):
+                            if part.isnumeric():
+                                newindex = int(
+                                    part)+int(chairParts[partLabel]['vcount'])
+                                subline[index] = str(newindex)
+                        lines[lineind] = ' '.join(subline)
+
+            joinedlines = '\n'.join(lines)
+            chairParts[partLabel]['text'] = chairParts[partLabel]['text']+joinedlines
+            chairParts[partLabel]['vcount'] = chairParts[partLabel]['text'].count(
+                'v')
+            pfile.close()
+    for part in chairParts:
+        if(len(chairParts[part]['text']) > 0):
+            partTri = trimesh.load(
+                StringIO(chairParts[part]['text']), file_type='obj', force='mesh')
+            trimesh.repair.fix_normals(partTri, multibody=False)
 
             partTri.visual.face_colors = np.full(
-                shape=[partTri.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors.get(plabels[iter])))
+                shape=[partTri.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors[part]))
 
             partMesh = pyrender.Mesh.from_trimesh(partTri, smooth=False)
-            parts.append((partMesh, partLabel))
+
+            parts.append((partMesh, part))
 
     return parts
 
