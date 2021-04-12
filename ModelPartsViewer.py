@@ -7,6 +7,7 @@ import ProjectUtils as pUtils
 import pyrender
 import random
 
+
 class Model:
     # parts are an array of type pyrender.Mesh
     def __init__(self, parts):
@@ -23,11 +24,14 @@ class ModelPartsViewer:
 
 modelPartsViewer = ModelPartsViewer()
 
+
 def setModels(models):
     modelPartsViewer.models = copy.deepcopy(models)
 
+
 def setCollections(collections):
     modelPartsViewer.collections = copy.deepcopy(collections)
+
 
 def setSceneMeshes(viewer, meshes):
     viewer.render_lock.acquire()
@@ -43,11 +47,13 @@ def setSceneMeshes(viewer, meshes):
 
     viewer.render_lock.release()
 
+
 def setModelIndex(viewer, index):
     modelPartsViewer.viewerModelIndex = index
     modelPartsViewer.renderMode = 0
     allModelParts = modelPartsViewer.models[index].parts
     setSceneMeshes(viewer, allModelParts)
+
 
 def setRenderModeIndex(viewer, model, renderModeIndex):
     modelPartsViewer.renderMode = renderModeIndex
@@ -58,6 +64,7 @@ def setRenderModeIndex(viewer, model, renderModeIndex):
     else:
         setSceneMeshes(viewer, [model.parts[partToView]])
 
+
 def showNewModelFromParts(viewer, parts):
     generatedChairModel = Model(parts)
     modelPartsViewer.models.append(generatedChairModel)
@@ -65,12 +72,14 @@ def showNewModelFromParts(viewer, parts):
 
 
 def viewNextModel(viewer):
-    nextIndex = (modelPartsViewer.viewerModelIndex+1) % len(modelPartsViewer.models)
+    nextIndex = (modelPartsViewer.viewerModelIndex +
+                 1) % len(modelPartsViewer.models)
     setModelIndex(viewer, nextIndex)
 
 
 def viewPrevModel(viewer):
-    prevIndex = (modelPartsViewer.viewerModelIndex-1) % len(modelPartsViewer.models)
+    prevIndex = (modelPartsViewer.viewerModelIndex -
+                 1) % len(modelPartsViewer.models)
     setModelIndex(viewer, prevIndex)
 
 
@@ -82,6 +91,7 @@ def viewNextPart(viewer):
     nextPartIndex = (modelPartsViewer.renderMode + 1) % renderModesCount
     setRenderModeIndex(viewer, model, nextPartIndex)
 
+
 def viewPrevPart(viewer):
     model = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
 
@@ -89,6 +99,7 @@ def viewPrevPart(viewer):
     renderModesCount = len(model.parts) + 1
     nextPartIndex = (modelPartsViewer.renderMode - 1) % renderModesCount
     setRenderModeIndex(viewer, model, nextPartIndex)
+
 
 def getRandomCollectionPart(partType):
     collectionSize = len(modelPartsViewer.collections[partType])
@@ -99,11 +110,13 @@ def getRandomCollectionPart(partType):
     mesh = modelPartsViewer.collections[partType][randomIndex]
     return copy.deepcopy(mesh)
 
+
 def partExistsInCollection(part, label):
     for collectionPart in modelPartsViewer.collections[label]:
         if part.name == collectionPart.name:
             return True
     return False
+
 
 def getPartLabel(part):
     if partExistsInCollection(part, 'back'):
@@ -117,32 +130,35 @@ def getPartLabel(part):
 
     return None
 
+
 def getModelPartByLabel(model, label):
     for part in model.parts:
         for collectionPart in modelPartsViewer.collections[label]:
             if part.name == collectionPart.name:
                 return copy.deepcopy(collectionPart)
-                
+
     return None
 
 # Use this method if you want to make a copy of the model with parts not being a part of any scene.
 # This is more of a temporary hack to generate un-bound mesh, will be fixed later.
+
+
 def generateOfflineModel(model):
     resultParts = []
     for part in model.parts:
         primitives = []
         for partPrimitive in part.primitives:
             primitive = pyrender.Primitive(
-                partPrimitive.positions, 
+                partPrimitive.positions,
                 partPrimitive.normals,
                 partPrimitive.tangents,
-                partPrimitive.texcoord_0, 
+                partPrimitive.texcoord_0,
                 partPrimitive.texcoord_1,
                 partPrimitive.color_0,
-                partPrimitive.joints_0, 
+                partPrimitive.joints_0,
                 partPrimitive.weights_0,
                 partPrimitive.indices,
-                partPrimitive.material, 
+                partPrimitive.material,
                 partPrimitive.mode,
                 partPrimitive.targets,
                 partPrimitive.poses
@@ -153,7 +169,7 @@ def generateOfflineModel(model):
     return Model(resultParts)
 
 
-############################ API END
+# API END
 
 def generateChair(viewer):
     # get random back, random seat, random leg, random arm rest
@@ -174,6 +190,7 @@ def generateChair(viewer):
 
     showNewModelFromParts(viewer, parts)
 
+
 def testFeature(viewer):
     # models contain all input chair models, each has .parts field with all available parts
     models = modelPartsViewer.models
@@ -185,13 +202,13 @@ def testFeature(viewer):
 
     # getModelPartByLabel(model, 'seat') can be used to get the seat part from the given model
     # altering the mesh does not lead to altering of the model
-    # type: pyrender.Mesh 
+    # type: pyrender.Mesh
     currentModel = models[modelPartsViewer.viewerModelIndex]
     currentModelSeatMesh = getModelPartByLabel(currentModel, 'seat')
 
     # getRandomCollectionPart('back') can be used to retrieve a random mesh from the collection.
     # altering the mesh does not lead to altering of the collection
-    # type: pyrender.Mesh 
+    # type: pyrender.Mesh
     randomBackMesh = getRandomCollectionPart('back')
 
     # each mesh contains primitives (pyrender.Primitive) and each primitive is our more familiar "mesh" with vertices, normals, etc.
@@ -200,7 +217,7 @@ def testFeature(viewer):
     for primitive in randomBackMesh.primitives:
         for pos in primitive.positions:
             randomVector = pUtils.randomUnitVector() * 0.02
-            pos+=randomVector
+            pos += randomVector
 
     # now let's replace all the chair legs
     legToReplaceWith = getRandomCollectionPart('leg')
@@ -208,7 +225,7 @@ def testFeature(viewer):
     for part in currentModel.parts:
         if getPartLabel(part) != 'leg':
             continue
-        
+
         # if it's a leg, then translate all the vertices from one centroid to another
         newLeg = copy.deepcopy(legToReplaceWith)
         pUtils.translateMeshAToB(newLeg, part)
@@ -227,6 +244,8 @@ def testFeature(viewer):
 
 # Takes a screenshot of the present chair model and saves it to the folder.
 # Demonstrates how to turn model into a set of pixels.
+
+
 def takeScreenshot(viewer):
     currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
     offlineModel = generateOfflineModel(currentModel)
@@ -236,7 +255,8 @@ def takeScreenshot(viewer):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    firstIndex = int(offlineModel.parts[0].name[0:offlineModel.parts[0].name.find("_")])
+    firstIndex = int(
+        offlineModel.parts[0].name[0:offlineModel.parts[0].name.find("_")])
     isGeneratedModel = False
     for part in offlineModel.parts:
         index = int(part.name[0:part.name.find("_")])
@@ -254,16 +274,17 @@ def takeScreenshot(viewer):
 
     # initialize perspectives
     rotations = [
-        (0, 0, 0),          #front
-        (0, np.pi, 0),      #back
-        (0,-np.pi/2,0),     #left
-        (0,np.pi/2,0),      #right
-        (np.pi/2,0,0),      #top
-        (-np.pi/2,0,0)      #bottom
+        (0, 0, 0),  # front
+        (0, np.pi, 0),  # back
+        (0, -np.pi/2, 0),  # left
+        (0, np.pi/2, 0),  # right
+        (np.pi/2, 0, 0),  # top
+        (-np.pi/2, 0, 0)  # bottom
     ]
 
     # each screenshot will have w,h,3 shape in returned array in the same order as the given rotations
-    perspectives = mps.capture(offlineModel, rotations, viewportWidth = 640, viewportHeight = 640, imageWidth=224, imageHeight=224, grayscale=True)
+    perspectives = mps.capture(offlineModel, rotations, viewportWidth=640,
+                               viewportHeight=640, imageWidth=224, imageHeight=224, grayscale=True)
 
     im = Image.fromarray(perspectives[0])
     im.save(os.path.join(directory, 'front.png'))
@@ -283,6 +304,7 @@ def takeScreenshot(viewer):
     im = Image.fromarray(perspectives[5])
     im.save(os.path.join(directory, 'bottom.png'))
 
+
 def start():
     modelPartsViewer.renderMode = 0
     modelPartsViewer.viewerModelIndex = 0
@@ -293,4 +315,4 @@ def start():
         defaultScene.add(part)
 
     pyrender.Viewer(defaultScene, registered_keys={
-                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 't': testFeature, 'x':takeScreenshot}, use_raymond_lighting=True)
+                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 't': testFeature, 'x': takeScreenshot}, use_raymond_lighting=True)
