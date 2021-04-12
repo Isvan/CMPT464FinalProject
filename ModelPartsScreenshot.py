@@ -11,22 +11,37 @@ def rotateAllMeshesInScene(scene, rotationRad):
             meshNode.rotation = quaternionRotation
 
 # Rotates meshes, takes picture and resets the rotation back
-def renderSceneWithRotation(offscreenRenderer, scene, rotationRad, imageSize, grayscale):
+def renderSceneWithRotation(offscreenRenderer, scene, rotationRad, depthBegin, depthEnd):
     rotateAllMeshesInScene(scene, rotationRad)
 
     pixels, depth = offscreenRenderer.render(scene)
-    if grayscale:
-        # Convert there and back so we still have shape w,h,3
-        pixels = cv2.cvtColor(pixels, cv2.COLOR_RGB2GRAY)
-        pixels = cv2.cvtColor(pixels, cv2.COLOR_GRAY2RGB)
 
-    pixels = cv2.resize(pixels, dsize=imageSize, interpolation=cv2.INTER_CUBIC)
+    rows = depth.shape[0]
+    cols = depth.shape[1]
+
+    for x in range(0, rows):
+        for y in range(0, cols):
+            depthValue = depth[x][y]
+
+            # make it white if no depth is present
+            if depthValue == 0.0:
+                depth[x][y] = 255
+            else:
+                # at begin depth color would be the darkest, at end - the lightest
+                value = pUtils.inverseLerp(depthBegin, depthEnd, depthValue)
+                depth[x][y] = 255 * value
+
+    # convert to int
+    depth = depth.astype(np.uint8)
+
+    # turn it to w,h,3 shape
+    depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2RGB)
 
     rotateAllMeshesInScene(scene, (0, 0, 0))
-    return pixels
+    return depth
 
 
-def capture(model, rotations, viewportWidth = 500, viewportHeight = 500, imageWidth = 224, imageHeight = 224, cameraZTranslation = 2.5, lightIntensity = 2.0, grayscale=True):
+def capture(model, rotations, imageWidth = 224, imageHeight = 224, cameraZTranslation = 2.5, lightIntensity = 2.0, depthBegin = 1, depthEnd = 5):
     # Construct an offline scene
     scene = pyrender.Scene()
 
@@ -35,7 +50,7 @@ def capture(model, rotations, viewportWidth = 500, viewportHeight = 500, imageWi
         scene.add(part)
 
     # add camera
-    renderCamera = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=viewportWidth/viewportHeight)
+    renderCamera = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=imageWidth/imageHeight)
     cameraNode = pyrender.Node(camera=renderCamera, matrix=np.eye(4))
     cameraNode.translation[2] = cameraZTranslation
     scene.add_node(cameraNode)
@@ -46,11 +61,11 @@ def capture(model, rotations, viewportWidth = 500, viewportHeight = 500, imageWi
     scene.add_node(lightNode)
 
     # initialize offscreen renderer
-    offscreenRenderer = pyrender.OffscreenRenderer(viewport_width = viewportWidth, viewport_height = viewportHeight, point_size = 1.0)
+    offscreenRenderer = pyrender.OffscreenRenderer(viewport_width = imageWidth, viewport_height = imageHeight, point_size = 1.0)
 
     # render
     result = []
     for rotation in rotations:
-        result.append(renderSceneWithRotation(offscreenRenderer, scene, rotation, (imageWidth, imageHeight), grayscale))
+        result.append(renderSceneWithRotation(offscreenRenderer, scene, rotation, depthBegin, depthEnd))
 
     return result
