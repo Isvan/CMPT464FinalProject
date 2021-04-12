@@ -283,7 +283,7 @@ def takeScreenshot(viewer):
     ]
 
     # each screenshot will have w,h,3 shape in returned array in the same order as the given rotations
-    perspectives = mps.capture(
+    perspectives = mps.captureDepth(
         offlineModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
 
     im = Image.fromarray(perspectives[0])

@@ -41,7 +41,7 @@ def renderSceneWithRotation(offscreenRenderer, scene, rotationRad, depthBegin, d
     return depth
 
 
-def capture(model, rotations, imageWidth = 224, imageHeight = 224, cameraZTranslation = 2.5, lightIntensity = 2.0, depthBegin = 1, depthEnd = 5):
+def captureDepth(model, rotations, imageWidth = 224, imageHeight = 224, cameraZTranslation = 2.5, lightIntensity = 2.0, depthBegin = 1, depthEnd = 5):
     # Construct an offline scene
     scene = pyrender.Scene()
 
