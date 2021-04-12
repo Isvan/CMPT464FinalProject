@@ -3,6 +3,7 @@ __pycache__
 virtual*
 dataset/__pycache__
 dataset/Chair
+screenshots
 
 #ML Stuff
 *.bmp
