@@ -33,3 +33,13 @@ def radEuler2Quat(vec3):
     qw = np.cos(x/2) * np.cos(y/2) * np.cos(z/2) + np.sin(x/2) * np.sin(y/2) * np.sin(z/2)
 
     return [qx, qy, qz, qw]
+
+def clamp(num, minVal, maxVal):
+    return max(min(num, maxVal), minVal)
+
+def lerp(a, b, t):
+    return t * a + (1-t) * b
+
+def inverseLerp(a, b, value):
+    num = (value-a)/(b-a)
+    return clamp(num, 0, 1)
