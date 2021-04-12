@@ -283,8 +283,8 @@ def takeScreenshot(viewer):
     ]
 
     # each screenshot will have w,h,3 shape in returned array in the same order as the given rotations
-    perspectives = mps.capture(offlineModel, rotations, viewportWidth=640,
-                               viewportHeight=640, imageWidth=224, imageHeight=224, grayscale=True)
+    perspectives = mps.capture(
+        offlineModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
 
     im = Image.fromarray(perspectives[0])
     im.save(os.path.join(directory, 'front.png'))
