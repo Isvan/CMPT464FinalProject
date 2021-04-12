@@ -21,3 +21,15 @@ def translateMeshAToB(meshA, meshB):
     for primitive in meshA.primitives:
         for pos in primitive.positions:
             pos+=translationVector
+
+#https://computergraphics.stackexchange.com/questions/8195/how-to-convert-euler-angles-to-quaternions-and-get-the-same-euler-angles-back-fr
+def radEuler2Quat(vec3):
+    x = vec3[0]
+    y = vec3[1]
+    z= vec3[2]
+    qx = np.sin(x/2) * np.cos(y/2) * np.cos(z/2) - np.cos(x/2) * np.sin(y/2) * np.sin(z/2)
+    qy = np.cos(x/2) * np.sin(y/2) * np.cos(z/2) + np.sin(x/2) * np.cos(y/2) * np.sin(z/2)
+    qz = np.cos(x/2) * np.cos(y/2) * np.sin(z/2) - np.sin(x/2) * np.sin(y/2) * np.cos(z/2)
+    qw = np.cos(x/2) * np.cos(y/2) * np.cos(z/2) + np.sin(x/2) * np.sin(y/2) * np.sin(z/2)
+
+    return [qx, qy, qz, qw]
