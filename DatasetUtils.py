@@ -126,7 +126,7 @@ def getDatasetObjParts(datasetIndex):
     #         partLabel = part_labels.get(plabels[iter])
 
     #         partTri.visual.face_colors = np.full(
-    #             shape=[partTri.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors.get(plabels[iter])))
+    #             shape=[partTri.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors.get(part_labels[plabels[iter]])))
 
     #         partMesh = pyrender.Mesh.from_trimesh(partTri, smooth=False)
 
