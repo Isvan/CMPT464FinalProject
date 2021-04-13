@@ -214,10 +214,11 @@ def testFeature(viewer):
     # each mesh contains primitives (pyrender.Primitive) and each primitive is our more familiar "mesh" with vertices, normals, etc.
     # usually mesh would have just one primitive (itself)
     # let's alter the back slightly
-    for primitive in randomBackMesh.primitives:
-        for pos in primitive.positions:
-            randomVector = pUtils.randomUnitVector() * 0.02
-            pos += randomVector
+    # for primitive in randomBackMesh.primitives:
+    # for pos in primitive.positions:
+
+    # randomVector = pUtils.randomUnitVector() * 0.02
+    # pos += randomVector
 
     # now let's replace all the chair legs
     legToReplaceWith = getRandomCollectionPart('leg')
@@ -228,7 +229,9 @@ def testFeature(viewer):
 
         # if it's a leg, then translate all the vertices from one centroid to another
         newLeg = copy.deepcopy(legToReplaceWith)
+        pUtils.scaleMeshAToB(newLeg, part)
         pUtils.translateMeshAToB(newLeg, part)
+
         newLegs.append(newLeg)
 
     # combine all the parts
@@ -237,6 +240,15 @@ def testFeature(viewer):
     resultParts.append(currentModelSeatMesh)
     for leg in newLegs:
         resultParts.append(leg)
+
+    resultParts = []
+    for part in currentModel.parts:
+        newPart = copy.deepcopy(getRandomCollectionPart(getPartLabel(part)))
+
+        pUtils.scaleMeshAToB(newPart, part)
+        pUtils.translateMeshAToB(newPart, part)
+
+        resultParts.append(newPart)
 
     # show the new model made out of all parts we need
     # it will appear on the screen and will be appended to the end of the viewable collection
