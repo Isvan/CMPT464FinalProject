@@ -6,6 +6,7 @@ from PIL import Image
 import ProjectUtils as pUtils
 import pyrender
 import random
+import sys
 
 class Part:
     def __init__(self, mesh, originalPart = None, side = None, label = None):
@@ -163,9 +164,14 @@ def getRandomCollectionPart(partType):
 
 # API END
 
-# Takes random pieces from collection and puts them together in a mesh
+# Takes random pieces from collection and puts them together in a mesh, replacing parts of a random chair
 def generateChair(viewer):
-    currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
+
+    # quick hack for getting the original number of models
+    # use original model as a template, not the new generated one
+    originalModelCount = len(sys.argv[1:])
+    randomModelIndex = int(random.randrange(0, originalModelCount))
+    randomModel = modelPartsViewer.models[randomModelIndex]
     chairParts = {
         'seat': getRandomCollectionPart('seat'), 
         'back': getRandomCollectionPart('back'),
@@ -174,7 +180,7 @@ def generateChair(viewer):
         }
 
     resultParts = []
-    for part in currentModel.parts:
+    for part in randomModel.parts:
         newPart = chairParts[part.label]
 
         # there are three total sided-ness: grouped, left and right
