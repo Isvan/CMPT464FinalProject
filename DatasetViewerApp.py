@@ -16,7 +16,8 @@ if __name__ == "__main__":
 
             for partTuple in partsTuples:
                 partMesh = partTuple[0]
-                partLabel = partTuple[1]
+                partSide = partTuple[1]
+                partLabel = partTuple[2]
 
                 # naming is important because we will match parts later
                 partMesh.name = str(index)+'_'+partLabel
