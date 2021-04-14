@@ -47,7 +47,7 @@ def captureDepth(model, rotations, imageWidth = 224, imageHeight = 224, cameraZT
 
     # add parts
     for part in model.parts:
-        scene.add(part)
+        scene.add(copy.deepcopy(part.mesh))
 
     # add camera
     renderCamera = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=imageWidth/imageHeight)

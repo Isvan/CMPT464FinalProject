@@ -7,11 +7,61 @@ import ProjectUtils as pUtils
 import pyrender
 import random
 
+class Part:
+    def __init__(self, mesh, originalPart = None, side = None, label = None):
+        self.mesh = copy.deepcopy(mesh)
+        if originalPart != None:
+            self.side = originalPart.side
+            self.label = originalPart.label
+        else:
+            assert side != None
+            assert label != None
+            self.side = side
+            self.label = label
+
+class CollectionPart:
+    def __init__(self):
+        self.left = None
+        self.right = None
+        self.grouped = None
+        self.label = None
+
+    @property
+    def left(self):
+        return copy.deepcopy(self._left)
+
+    @left.setter
+    def left(self, value):
+        self._left = copy.deepcopy(value)
+
+    @property
+    def right(self):
+        return copy.deepcopy(self._right)
+
+    @right.setter
+    def right(self, value):
+        self._right = copy.deepcopy(value)
+
+    @property
+    def grouped(self):
+        return copy.deepcopy(self._grouped)
+
+    @grouped.setter
+    def grouped(self, value):
+        self._grouped = copy.deepcopy(value)
 
 class Model:
-    # parts are an array of type pyrender.Mesh
     def __init__(self, parts):
         self.parts = copy.deepcopy(parts)
+        self.name = "default"
+    
+    def getPartByLabel(self, label):
+        for part in self.parts:
+            if part.label == label:
+                return copy.deepcopy(part)
+
+        return None
+
 
 
 class ModelPartsViewer:
@@ -33,7 +83,7 @@ def setCollections(collections):
     modelPartsViewer.collections = copy.deepcopy(collections)
 
 
-def setSceneMeshes(viewer, meshes):
+def setSceneMeshes(viewer, parts):
     viewer.render_lock.acquire()
 
     # Remove all the current meshes
@@ -42,8 +92,10 @@ def setSceneMeshes(viewer, meshes):
         viewer.scene.remove_node(meshNode)
 
     # Add all the new meshes
-    for mesh in meshes:
-        viewer.scene.add(mesh)
+    for part in parts:
+        # we never manipulate meshes in the scene, only construct new ones
+        # therefore, copying it is much safer because now we can access the "current mesh" parts
+        viewer.scene.add(copy.deepcopy(part.mesh))
 
     viewer.render_lock.release()
 
@@ -107,148 +159,37 @@ def getRandomCollectionPart(partType):
         return None
 
     randomIndex = int(random.randrange(0, collectionSize))
-    mesh = modelPartsViewer.collections[partType][randomIndex]
-    return copy.deepcopy(mesh)
-
-
-def partExistsInCollection(part, label):
-    for collectionPart in modelPartsViewer.collections[label]:
-        if part.name == collectionPart.name:
-            return True
-    return False
-
-
-def getPartLabel(part):
-    if partExistsInCollection(part, 'back'):
-        return 'back'
-    if partExistsInCollection(part, 'seat'):
-        return 'seat'
-    if partExistsInCollection(part, 'leg'):
-        return 'leg'
-    if partExistsInCollection(part, 'arm rest'):
-        return 'arm rest'
-
-    return None
-
-
-def getModelPartByLabel(model, label):
-    for part in model.parts:
-        for collectionPart in modelPartsViewer.collections[label]:
-            if part.name == collectionPart.name:
-                return copy.deepcopy(collectionPart)
-
-    return None
-
-# Use this method if you want to make a copy of the model with parts not being a part of any scene.
-# This is more of a temporary hack to generate un-bound mesh, will be fixed later.
-
-
-def generateOfflineModel(model):
-    resultParts = []
-    for part in model.parts:
-        primitives = []
-        for partPrimitive in part.primitives:
-            primitive = pyrender.Primitive(
-                partPrimitive.positions,
-                partPrimitive.normals,
-                partPrimitive.tangents,
-                partPrimitive.texcoord_0,
-                partPrimitive.texcoord_1,
-                partPrimitive.color_0,
-                partPrimitive.joints_0,
-                partPrimitive.weights_0,
-                partPrimitive.indices,
-                partPrimitive.material,
-                partPrimitive.mode,
-                partPrimitive.targets,
-                partPrimitive.poses
-            )
-            primitives.append(primitive)
-        partCopy = pyrender.Mesh(primitives, name=part.name)
-        resultParts.append(partCopy)
-    return Model(resultParts)
-
+    return modelPartsViewer.collections[partType][randomIndex]
 
 # API END
 
+# Takes random pieces from collection and puts them together in a mesh
 def generateChair(viewer):
-    # get random back, random seat, random leg, random arm rest
-    backPartMesh = getRandomCollectionPart('back')
-    seatPartMesh = getRandomCollectionPart('seat')
-    legPartMesh = getRandomCollectionPart('leg')
-    armRestPartMesh = getRandomCollectionPart('arm rest')
-
-    parts = []
-    if backPartMesh != None:
-        parts.append(backPartMesh)
-    if seatPartMesh != None:
-        parts.append(seatPartMesh)
-    if legPartMesh != None:
-        parts.append(legPartMesh)
-    if armRestPartMesh != None:
-        parts.append(armRestPartMesh)
-
-    showNewModelFromParts(viewer, parts)
-
-
-def testFeature(viewer):
-    # models contain all input chair models, each has .parts field with all available parts
-    models = modelPartsViewer.models
-
-    # collections['back'] contain all of back parts as pyrender.Mesh objects
-    collections = modelPartsViewer.collections
-
-    # Test task: let's take the seat of the currently displayed chair, replace all the legs and take some random back.
-
-    # getModelPartByLabel(model, 'seat') can be used to get the seat part from the given model
-    # altering the mesh does not lead to altering of the model
-    # type: pyrender.Mesh
-    currentModel = models[modelPartsViewer.viewerModelIndex]
-    currentModelSeatMesh = getModelPartByLabel(currentModel, 'seat')
-
-    # getRandomCollectionPart('back') can be used to retrieve a random mesh from the collection.
-    # altering the mesh does not lead to altering of the collection
-    # type: pyrender.Mesh
-    randomBackMesh = getRandomCollectionPart('back')
-
-    # each mesh contains primitives (pyrender.Primitive) and each primitive is our more familiar "mesh" with vertices, normals, etc.
-    # usually mesh would have just one primitive (itself)
-    # let's alter the back slightly
-    # for primitive in randomBackMesh.primitives:
-    # for pos in primitive.positions:
-
-    # randomVector = pUtils.randomUnitVector() * 0.02
-    # pos += randomVector
-
-    # now let's replace all the chair legs
-    legToReplaceWith = getRandomCollectionPart('leg')
-    newLegs = []
-    for part in currentModel.parts:
-        if getPartLabel(part) != 'leg':
-            continue
-
-        # if it's a leg, then translate all the vertices from one centroid to another
-        newLeg = copy.deepcopy(legToReplaceWith)
-        pUtils.scaleMeshAToB(newLeg, part)
-        pUtils.translateMeshAToB(newLeg, part)
-
-        newLegs.append(newLeg)
-
-    # combine all the parts
-    resultParts = []
-    resultParts.append(randomBackMesh)
-    resultParts.append(currentModelSeatMesh)
-    for leg in newLegs:
-        resultParts.append(leg)
+    currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
+    chairParts = {
+        'seat': getRandomCollectionPart('seat'), 
+        'back': getRandomCollectionPart('back'),
+        'leg': getRandomCollectionPart('leg'),
+        'arm rest': getRandomCollectionPart('arm rest')
+        }
 
     resultParts = []
     for part in currentModel.parts:
-        newPart = copy.deepcopy(getRandomCollectionPart(getPartLabel(part)))
+        newPart = chairParts[part.label]
 
-        pUtils.scaleMeshAToB(newPart, part)
-        pUtils.translateMeshAToB(newPart, part)
+        # there are three total sided-ness: grouped, left and right
+        newPartMesh = None
+        if part.side == 'grouped':
+            newPartMesh = newPart.grouped
+        elif part.side == 'right':
+            newPartMesh = newPart.right
+        else:
+            newPartMesh = newPart.left
 
-        resultParts.append(newPart)
+        pUtils.scaleMeshAToB(newPartMesh, part.mesh)
+        pUtils.translateMeshAToB(newPartMesh, part.mesh)
+
+        resultParts.append(Part(mesh = newPartMesh, originalPart = part))
 
     # show the new model made out of all parts we need
     # it will appear on the screen and will be appended to the end of the viewable collection
@@ -256,29 +197,19 @@ def testFeature(viewer):
 
 # Takes a screenshot of the present chair model and saves it to the folder.
 # Demonstrates how to turn model into a set of pixels.
-
-
 def takeScreenshot(viewer):
     currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
-    offlineModel = generateOfflineModel(currentModel)
 
     # Prapre directories to write to
     directory = os.path.dirname('screenshots/')
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    firstIndex = int(
-        offlineModel.parts[0].name[0:offlineModel.parts[0].name.find("_")])
-    isGeneratedModel = False
-    for part in offlineModel.parts:
-        index = int(part.name[0:part.name.find("_")])
-        if firstIndex != index:
-            isGeneratedModel = True
-
     # images are saved in either {num}/ folder if original chairs or in generated/ folder if were generated.
-    modelDirectory = str(firstIndex) + '/'
-    if isGeneratedModel:
-        modelDirectory = 'generated/'
+    isGeneratedModel = currentModel.name == "default"
+    modelDirectory = 'generated/'
+    if not isGeneratedModel:
+        modelDirectory = currentModel.name+'/'        
 
     directory = os.path.join(directory, modelDirectory)
     if not os.path.exists(directory):
@@ -296,7 +227,7 @@ def takeScreenshot(viewer):
 
     # each screenshot will have w,h,3 shape in returned array in the same order as the given rotations
     perspectives = mps.captureDepth(
-        offlineModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
+        currentModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
 
     im = Image.fromarray(perspectives[0])
     im.save(os.path.join(directory, 'front.png'))
@@ -324,7 +255,7 @@ def start():
     defaultModel = modelPartsViewer.models[0]
     defaultScene = pyrender.Scene()
     for part in defaultModel.parts:
-        defaultScene.add(part)
+        defaultScene.add(copy.deepcopy(part.mesh))
 
     pyrender.Viewer(defaultScene, registered_keys={
-                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 't': testFeature, 'x': takeScreenshot}, use_raymond_lighting=True)
+                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 'x': takeScreenshot}, use_raymond_lighting=True)

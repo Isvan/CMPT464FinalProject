@@ -6,6 +6,44 @@ import re
 import trimesh
 from io import StringIO
 
+# Splits the legs or arm rests by overlaying a "cross" at the centroid
+# Produces the meaningful parts (whole leg, whole armrest, etc.) whenever possible
+def splitPartMesh(partMesh, partLabel):
+    meshes = []
+
+    # always have the grouped version in the collection
+    meshes.append((partMesh, 'grouped'))
+
+    if partLabel == 'leg' or partLabel == 'arm rest':
+        centroid = partMesh.centroid
+
+        # if plane (1, 0, 0) intersects the mesh at centroid, then don't slice it - mesh is a whole
+        lines = trimesh.intersections.mesh_plane(partMesh, (1, 0, 0), centroid)
+        isSplitMesh = len(lines) == 0
+
+        if isSplitMesh:
+            sideRight = partMesh.slice_plane(centroid, (-1, 0, 0))
+            sideLeft = partMesh.slice_plane(centroid, (1, 0, 0))
+
+            # in we have 2 armrests or 2 legs only, we won't be able to split the sideRight and sideLeft furthermore
+            # but if we can split, then there must be 4 legs or >2 arm rests
+            isSideRightSplitMesh = len(trimesh.intersections.mesh_plane(sideRight, (0, 0, 1), sideRight.centroid)) == 0
+            if not isSideRightSplitMesh:
+                meshes.append((sideRight, 'right'))
+            else:
+                meshes.append((sideRight.slice_plane(sideRight.centroid, (0, 0, 1)), 'right'))
+                meshes.append((sideRight.slice_plane(sideRight.centroid, (0, 0, -1)), 'right'))
+
+            
+            isSideLeftSplitMesh = len(trimesh.intersections.mesh_plane(sideLeft, (0, 0, 1), sideLeft.centroid)) == 0
+            if not isSideLeftSplitMesh:
+                meshes.append((sideLeft, 'left'))
+            else:
+                meshes.append((sideLeft.slice_plane(sideLeft.centroid, (0, 0, 1)), 'left'))
+                meshes.append((sideLeft.slice_plane(sideLeft.centroid, (0, 0, -1)), 'left'))
+
+    return meshes
+
 
 def atoi(text):
     return int(text) if text.isdigit() else text
@@ -158,12 +196,11 @@ def getDatasetObjParts(datasetIndex):
                 StringIO(chairParts[part]['text']), file_type='obj', force='mesh')
             trimesh.repair.fix_normals(partTri, multibody=False)
 
-            partTri.visual.face_colors = np.full(
-                shape=[partTri.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors[part]))
-
-            partMesh = pyrender.Mesh.from_trimesh(partTri, smooth=False)
-
-            parts.append((partMesh, part))
+            meshes = splitPartMesh(partTri, part) #part is label
+            for body, side in meshes:
+                    body.visual.face_colors = np.full(shape=[body.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors[part]))
+                    partMesh = pyrender.Mesh.from_trimesh(body, smooth=False)
+                    parts.append((partMesh, side, part))
 
     return parts
 
