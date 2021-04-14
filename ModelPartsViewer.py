@@ -161,37 +161,6 @@ def getRandomCollectionPart(partType):
     randomIndex = int(random.randrange(0, collectionSize))
     return modelPartsViewer.collections[partType][randomIndex]
 
-
-# Use this method if you want to make a copy of the model with parts not being a part of any scene.
-# This is more of a temporary hack to generate un-bound mesh, will be fixed later.
-def generateOfflineModel(model):
-    resultParts = []
-    for part in model.parts:
-        primitives = []
-        for partPrimitive in part.mesh.primitives:
-            primitive = pyrender.Primitive(
-                partPrimitive.positions,
-                partPrimitive.normals,
-                partPrimitive.tangents,
-                partPrimitive.texcoord_0,
-                partPrimitive.texcoord_1,
-                partPrimitive.color_0,
-                partPrimitive.joints_0,
-                partPrimitive.weights_0,
-                partPrimitive.indices,
-                partPrimitive.material,
-                partPrimitive.mode,
-                partPrimitive.targets,
-                partPrimitive.poses
-            )
-            primitives.append(primitive)
-        partCopy = pyrender.Mesh(primitives)
-        resultParts.append(Part(mesh = partCopy, side = part.side, label = part.label))
-    resultModel = Model(resultParts)
-    resultModel.name = model.name
-    return resultModel
-
-
 # API END
 
 # Takes random pieces from collection and puts them together in a mesh
@@ -230,7 +199,6 @@ def generateChair(viewer):
 # Demonstrates how to turn model into a set of pixels.
 def takeScreenshot(viewer):
     currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
-    offlineModel = generateOfflineModel(currentModel)
 
     # Prapre directories to write to
     directory = os.path.dirname('screenshots/')
@@ -238,10 +206,10 @@ def takeScreenshot(viewer):
         os.makedirs(directory)
 
     # images are saved in either {num}/ folder if original chairs or in generated/ folder if were generated.
-    isGeneratedModel = offlineModel.name == "default"
+    isGeneratedModel = currentModel.name == "default"
     modelDirectory = 'generated/'
     if not isGeneratedModel:
-        modelDirectory = offlineModel.name+'/'        
+        modelDirectory = currentModel.name+'/'        
 
     directory = os.path.join(directory, modelDirectory)
     if not os.path.exists(directory):
@@ -259,7 +227,7 @@ def takeScreenshot(viewer):
 
     # each screenshot will have w,h,3 shape in returned array in the same order as the given rotations
     perspectives = mps.captureDepth(
-        offlineModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
+        currentModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
 
     im = Image.fromarray(perspectives[0])
     im.save(os.path.join(directory, 'front.png'))
@@ -287,7 +255,7 @@ def start():
     defaultModel = modelPartsViewer.models[0]
     defaultScene = pyrender.Scene()
     for part in defaultModel.parts:
-        defaultScene.add(part.mesh)
+        defaultScene.add(copy.deepcopy(part.mesh))
 
     pyrender.Viewer(defaultScene, registered_keys={
                     'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 'x': takeScreenshot}, use_raymond_lighting=True)
