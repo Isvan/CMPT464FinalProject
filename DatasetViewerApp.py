@@ -1,3 +1,4 @@
+import random
 import sys
 
 import DatasetUtils as dt
@@ -56,18 +57,31 @@ def parseDatasetChairTuples(partsTuples, collections):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Please run with dataset indices (1-6201) (example: \"DatasetViewerApp.py 1 2 3\")")
+        print("Please run with dataset indices (1-6201) (example: \"DatasetViewerApp.py 1 2 3\") or to test \"DatasetViewerApp.py -r 10\"")
+        quit()
+    
+    datasetIndices = []
+    if sys.argv[1] == '-r':
+        if len(sys.argv) < 3:
+            print("Random mode: enter the number of random chairs to get from dataset e.g. \"DatasetViewerApp.py -r 10\"")
+            quit()
+        
+        randomAmount = int(sys.argv[2])
+        for i in range(randomAmount):
+            randomIndex = int(random.randrange(1, 6201))
+            datasetIndices.append(str(randomIndex))
     else:
         datasetIndices = sys.argv[1:]
-        models = []
-        collections = {'back': [], 'seat':[], 'leg': [], 'arm rest': []}
-        for index in datasetIndices:
-            partsTuples = dt.getDatasetObjParts(index)
-            modelParts = parseDatasetChairTuples(partsTuples, collections)
-            model = mpv.Model(modelParts)
-            model.name = str(index) # for screenshotting convenience
-            models.append(model)
 
-        mpv.setCollections(collections)
-        mpv.setModels(models)
-        mpv.start()
+    models = []
+    collections = {'back': [], 'seat':[], 'leg': [], 'arm rest': []}
+    for index in datasetIndices:
+        partsTuples = dt.getDatasetObjParts(index)
+        modelParts = parseDatasetChairTuples(partsTuples, collections)
+        model = mpv.Model(modelParts)
+        model.name = str(index) # for screenshotting convenience
+        models.append(model)
+
+    mpv.setCollections(collections)
+    mpv.setModels(models)
+    mpv.start()
