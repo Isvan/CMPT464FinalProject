@@ -4,7 +4,7 @@ import sys
 import DatasetUtils as dt
 import ModelPartsViewer as mpv
 
-def parseDatasetChairTuples(partsTuples, collections):
+def parseDatasetChairTuples(modelIndex, partsTuples, collections):
     modelParts = []
     partsDictrionary = {}
     for partMesh, partSide, partLabel in partsTuples:
@@ -21,7 +21,7 @@ def parseDatasetChairTuples(partsTuples, collections):
 
         # second - form the new collection
         # would like to access collections['leg'][0] for example, which would have .left, .right, .grouped
-        partIdentifier = str(index)+'_'+partLabel
+        partIdentifier = str(modelIndex)+'_'+partLabel
         collectionPart = None
         if partIdentifier in partsDictrionary:
             collectionPart = partsDictrionary[partIdentifier]
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     collections = {'back': [], 'seat':[], 'leg': [], 'arm rest': []}
     for index in datasetIndices:
         partsTuples = dt.getDatasetObjParts(index)
-        modelParts = parseDatasetChairTuples(partsTuples, collections)
+        modelParts = parseDatasetChairTuples(index, partsTuples, collections)
         model = mpv.Model(modelParts)
         model.name = str(index) # for screenshotting convenience
         models.append(model)
