@@ -2,6 +2,8 @@ import cv2
 import os
 import numpy as np
 
+from config import *
+
 '''
 load chair dataset. Dimension refers to the target dimension of the output image, used to save up memory.
 The images are originally 224 x 224.
@@ -26,7 +28,7 @@ def load(dimension):
         length = len(os.listdir(folder)) // 3
         ls += length
 
-        for filename in os.listdir(folder):
+        for filename in progressbar(os.listdir(folder), "Configuring input data"):
 
             view = int(filename.split(".")[0])
             view = view % 3
@@ -62,9 +64,9 @@ def load(dimension):
     imagesSide = np.array(imagesSide)
 
     # flatten the images
-    imagesTop = np.reshape(imagesTop, (ls, dimension * dimension))
-    imagesFront = np.reshape(imagesFront, (ls, dimension * dimension))
-    imagesSide = np.reshape(imagesSide, (ls, dimension * dimension))
+    #imagesTop = np.reshape(imagesTop, (ls, dimension * dimension))
+    #imagesFront = np.reshape(imagesFront, (ls, dimension * dimension))
+    #imagesSide = np.reshape(imagesSide, (ls, dimension * dimension))
 
     seed = 547
     np.random.seed(seed)
