@@ -8,47 +8,10 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
+import NNModels
+import chairs_dataset
 
-# Global controls
-batch_size = 200
-img_height = 56
-img_width = 56
-training_epochs = 20
-# For now hardset seed, but in the future just set to some random number or current time
-seed = 100
-
-
-def createModel():
-    num_classes = 2
-    data_augmentation = keras.Sequential(
-        [
-            tf.keras.layers.experimental.preprocessing.RandomTranslation(
-                0.1, 0.1),
-            layers.experimental.preprocessing.RandomRotation(0.2),
-            layers.experimental.preprocessing.RandomZoom(0.1)
-        ]
-    )
-
-    model = Sequential([
-        layers.experimental.preprocessing.Rescaling(
-            1./255, input_shape=(img_height, img_width, 3)),
-
-        layers.Conv2D(32, 5, padding='same', activation='relu'),
-        layers.MaxPooling2D(),
-        layers.Conv2D(64, 5, padding='same', activation='relu'),
-        layers.MaxPooling2D(),
-        layers.Flatten(),
-        layers.Dense(1024, activation='relu'),
-        layers.Dropout(0.4),
-        layers.Dense(num_classes)
-    ])
-
-    model.compile(optimizer='adam',
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(
-                      from_logits=True),
-                  metrics=['accuracy'])
-
-    return model
+from config import *
 
 
 def setTrainingData(data):
@@ -56,6 +19,7 @@ def setTrainingData(data):
         data,
         validation_split=0.2,
         subset="training",
+        # color_mode="grayscale",
         seed=seed,
         image_size=(img_height, img_width),
         batch_size=batch_size)
@@ -65,6 +29,7 @@ def setValidationData(data):
     return tf.keras.preprocessing.image_dataset_from_directory(
         data,
         validation_split=0.2,
+        # color_mode="grayscale",
         subset="validation",
         seed=seed,
         image_size=(img_height, img_width),
@@ -119,32 +84,98 @@ def printGraphOfResults(history, title):
     plt.plot(epochs_range, val_loss, label='Validation Loss')
     plt.legend(loc='upper right')
     plt.title('Training and Validation Loss For ' + title)
-    plt.savefig(title + "-trainingResult" +
+    plt.savefig(graphResultsFolder+title + "-trainingResult" +
                 str(training_epochs)+"-"+str(batch_size)+".png")
     plt.close()
 
 
-def main(*argv):
-
+def runTripleSingleNN():
     # Need for identifcation later on
-    dataTitles = ["Top", "Side", "Front"]
-    models = [createModel(), createModel(), createModel()]
-    trainingData = getTrainingDataTuples()
-    print(trainingData)
+    models = [NNModels.getSingleViewModelSingleDim(), NNModels.getSingleViewModelSingleDim(),
+              NNModels.getSingleViewModelSingleDim()]
+    # trainingData = getTrainingDataTuples()
+    # print(trainingData)
     index = 0
 
-    for training, validation in trainingData:
+    if not os.path.exists(graphResultsFolder):
+        os.makedirs(graphResultsFolder)
 
-        print("Starting to Train View " + dataTitles[index])
+    imagesTop, imagesFront, imagesSide, topLabel, frontLabel, sideLabel = chairs_dataset.load(
+        img_height)
+
+    # ["Top", "Side", "Front"]
+
+    trainingData = [(imagesTop, topLabel), (imagesSide,
+                                            sideLabel), (imagesFront, frontLabel)]
+
+    for data, label in trainingData:
+
+        model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath=checkpointFilepath +
+            dataTitlesTripleView[index]+"/checkpoint",
+            save_weights_only=True,
+            # monitor='val_accuracy',
+            # mode='auto',
+            save_best_only=False)
+
+        print("Starting to Train View " + dataTitlesTripleView[index])
         history = models[index].fit(
-            training,
-            validation_data=validation,
-            epochs=training_epochs
+            x=data,
+            y=label,
+            validation_split=0.2,
+            epochs=training_epochs,
+            batch_size=batch_size,
+            callbacks=[model_checkpoint_callback]
         )
 
-        print("Done training View " + dataTitles[index])
-        printGraphOfResults(history, dataTitles[index])
+        print("Done training View " + dataTitlesTripleView[index])
+        printGraphOfResults(history, dataTitlesTripleView[index])
+
         index += 1
+
+
+def runSingleTripleBranchNN():
+    # Need for identifcation later on
+    model = NNModels.getMultiViewModel()
+
+    checkPoint = tf.train.latest_checkpoint(
+        checkpointFilepath + "tripleView"+"")
+    if(checkPoint):
+        model.load_weights(checkPoint)
+
+    print("CheckPoints")
+    print(checkPoint)
+
+    if not os.path.exists(graphResultsFolder):
+        os.makedirs(graphResultsFolder)
+
+    imagesTop, imagesFront, imagesSide, topLabel, frontLabel, sideLabel = chairs_dataset.load(
+        img_height)
+
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpointFilepath +
+        "tripleView"+"/checkpoint",
+        save_weights_only=True,
+        # monitor='val_accuracy',
+        # mode='auto',
+        save_best_only=True)
+
+    print("Starting to Train Triple View")
+    history = model.fit(
+        x=[imagesTop, imagesSide, imagesFront],
+        y=topLabel,
+        validation_split=0.2,
+        epochs=training_epochs,
+        batch_size=batch_size,
+        callbacks=[model_checkpoint_callback]
+    )
+
+    print("Done training Triple View ")
+    printGraphOfResults(history, "Triple View")
+
+
+def main(*argv):
+    runSingleTripleBranchNN()
 
 
 if __name__ == "__main__":
