@@ -4,11 +4,19 @@ import sys
 import DatasetUtils as dt
 import ModelPartsViewer as mpv
 
+<< << << < HEAD
 def parseDatasetChairTuples(partsTuples, collections):
+
+
+== == == =
+def parseDatasetChairTuples(modelIndex, partsTuples, collections):
+
+
+>>>>>> > d20e78c00c8be4507b41d6382aad37fe371440df
     modelParts = []
     partsDictrionary = {}
     for partMesh, partSide, partLabel in partsTuples:
-        part = mpv.Part(mesh = partMesh, side = partSide, label = partLabel)
+        part = mpv.Part(mesh=partMesh, side=partSide, label=partLabel)
 
         # first - construct the model to manipulate and display
         # remove 'grouped' piece if just found 'left' or 'right'
@@ -21,7 +29,11 @@ def parseDatasetChairTuples(partsTuples, collections):
 
         # second - form the new collection
         # would like to access collections['leg'][0] for example, which would have .left, .right, .grouped
+<< << << < HEAD
         partIdentifier = str(index)+'_'+partLabel
+== == == =
+        partIdentifier = str(modelIndex)+'_'+partLabel
+>>>>>> > d20e78c00c8be4507b41d6382aad37fe371440df
         collectionPart = None
         if partIdentifier in partsDictrionary:
             collectionPart = partsDictrionary[partIdentifier]
@@ -36,7 +48,7 @@ def parseDatasetChairTuples(partsTuples, collections):
             collectionPart.left = partMesh
         if partSide == 'right':
             collectionPart.right = partMesh
-    
+
     # Ensure the consistency of the parts collection
     for partIdentifier, part in partsDictrionary.items():
         # grouped must always be present
@@ -77,7 +89,8 @@ if __name__ == "__main__":
     collections = {'back': [], 'seat':[], 'leg': [], 'arm rest': []}
     for index in datasetIndices:
         partsTuples = dt.getDatasetObjParts(index)
-        modelParts = parseDatasetChairTuples(partsTuples, collections)
+        modelParts = parseDatasetChairTuples(index, partsTuples, collections)
+
         model = mpv.Model(modelParts)
         model.name = str(index) # for screenshotting convenience
         models.append(model)
