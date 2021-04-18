@@ -4,11 +4,12 @@ import sys
 import DatasetUtils as dt
 import ModelPartsViewer as mpv
 
-def parseDatasetChairTuples(modelIndex, partsTuples, collections):
+
+def parseDatasetChairTuples(modelIndex, partsTuples, collections) -> list:
     modelParts = []
-    partsDictrionary = {}
+    partsDictionary = {}
     for partMesh, partSide, partLabel in partsTuples:
-        part = mpv.Part(mesh = partMesh, side = partSide, label = partLabel)
+        part = mpv.Part(mesh=partMesh, side=partSide, label=partLabel)
 
         # first - construct the model to manipulate and display
         # remove 'grouped' piece if just found 'left' or 'right'
@@ -21,13 +22,12 @@ def parseDatasetChairTuples(modelIndex, partsTuples, collections):
 
         # second - form the new collection
         # would like to access collections['leg'][0] for example, which would have .left, .right, .grouped
-        partIdentifier = str(modelIndex)+'_'+partLabel
-        collectionPart = None
-        if partIdentifier in partsDictrionary:
-            collectionPart = partsDictrionary[partIdentifier]
+        partIdentifier = str(modelIndex) + '_' + partLabel
+        if partIdentifier in partsDictionary:
+            collectionPart = partsDictionary[partIdentifier]
         else:
             collectionPart = mpv.CollectionPart()
-            partsDictrionary[partIdentifier] = collectionPart
+            partsDictionary[partIdentifier] = collectionPart
 
         collectionPart.label = partLabel
         if partSide == 'grouped':
@@ -36,9 +36,9 @@ def parseDatasetChairTuples(modelIndex, partsTuples, collections):
             collectionPart.left = partMesh
         if partSide == 'right':
             collectionPart.right = partMesh
-    
+
     # Ensure the consistency of the parts collection
-    for partIdentifier, part in partsDictrionary.items():
+    for partIdentifier, part in partsDictionary.items():
         # grouped must always be present
         assert part.grouped != None
 
@@ -49,23 +49,25 @@ def parseDatasetChairTuples(modelIndex, partsTuples, collections):
             part.right = part.grouped
 
         # store in appropriate collection
-        collections[part.label].append(part) 
+        collections[part.label].append(part)
 
-    # return model parts
+        # return model parts
     return modelParts
-    
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Please run with dataset indices (1-6201) (example: \"DatasetViewerApp.py 1 2 3\") or to test \"DatasetViewerApp.py -r 10\"")
+        print(
+            "Please run with dataset indices (1-6201) (example: \"DatasetViewerApp.py 1 2 3\") or to test \"DatasetViewerApp.py -r 10\"")
         quit()
-    
+
     datasetIndices = []
     if sys.argv[1] == '-r':
         if len(sys.argv) < 3:
-            print("Random mode: enter the number of random chairs to get from dataset e.g. \"DatasetViewerApp.py -r 10\"")
+            print(
+                "Random mode: enter the number of random chairs to get from dataset e.g. \"DatasetViewerApp.py -r 10\"")
             quit()
-        
+
         randomAmount = int(sys.argv[2])
         for i in range(randomAmount):
             randomIndex = int(random.randrange(1, 6201))
@@ -74,12 +76,12 @@ if __name__ == "__main__":
         datasetIndices = sys.argv[1:]
 
     models = []
-    collections = {'back': [], 'seat':[], 'leg': [], 'arm rest': []}
+    collections = {'back': [], 'seat': [], 'leg': [], 'arm rest': []}
     for index in datasetIndices:
         partsTuples = dt.getDatasetObjParts(index)
         modelParts = parseDatasetChairTuples(index, partsTuples, collections)
         model = mpv.Model(modelParts)
-        model.name = str(index) # for screenshotting convenience
+        model.name = str(index)  # for screenshotting convenience
         models.append(model)
 
     mpv.setCollections(collections)

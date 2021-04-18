@@ -32,7 +32,6 @@ def generateChair(models, collections):
         newPart = chairParts[part.label]
 
         # there are three total sided-ness: grouped, left and right
-        newPartMesh = None
         if part.side == 'grouped':
             newPartMesh = newPart.grouped
         elif part.side == 'right':
@@ -41,15 +40,15 @@ def generateChair(models, collections):
             newPartMesh = newPart.left
 
         pUtils.scaleMeshAToB(newPartMesh, part.mesh)
-        pUtils.translateMeshAToB(newPartMesh, part.mesh)
+        pUtils.translateMeshAToB(newPartMesh, part.mesh, part.label)
 
-        resultParts.append(mpv.Part(mesh = newPartMesh, originalPart = part))
+        resultParts.append(mpv.Part(mesh=newPartMesh, originalPart=part))
     return mpv.Model(resultParts)
 
 
 if __name__ == "__main__":
     # take 10 random chairs and form collections
-    sourceChairCount = 10
+    sourceChairCount = 3
     datasetIndices = []
     for i in range(sourceChairCount):
         randomIndex = int(random.randrange(1, 6201))

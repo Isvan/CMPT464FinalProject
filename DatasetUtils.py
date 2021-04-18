@@ -10,7 +10,7 @@ from io import StringIO
 # Produces the meaningful parts (whole leg, whole armrest, etc.) whenever possible
 
 
-def splitPartMesh(partMesh, partLabel):
+def splitPartMesh(partMesh, partLabel) -> list:
     meshes = []
 
     # always have the grouped version in the collection
@@ -68,7 +68,7 @@ def natural_keys(text):
 # output has an array of pyrender.Mesh objects (parts)
 
 
-def getDatasetObjParts(datasetIndex):
+def getDatasetObjParts(datasetIndex) -> list:
     json_data_path = 'dataset/compiled/'
     dataset_path = 'dataset/Chair/'
 
@@ -87,7 +87,6 @@ def getDatasetObjParts(datasetIndex):
         mkdir(partPath)
         print("created directory for all parts")
     except:
-        #print("parts directory exists")
         i = 0
 
     try:
@@ -164,18 +163,7 @@ def getDatasetObjParts(datasetIndex):
     sorted_names.sort(key=natural_keys)
     chairParts = {'back': {'text': "", 'vcount': 0}, 'seat': {'text': "", 'vcount': 0}, 'leg': {
         'text': "", 'vcount': 0}, 'arm rest': {'text': "", 'vcount': 0}}
-    # for iter, filename in enumerate(sorted_names):
-    #     if filename.endswith(".obj"):
-    #         partTri = trimesh.load(partPath+modelNum+'/'+filename)
-    #         trimesh.repair.fix_normals(partTri, multibody=False)
-    #         partLabel = part_labels.get(plabels[iter])
 
-    #         partTri.visual.face_colors = np.full(
-    #             shape=[partTri.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors.get(part_labels[plabels[iter]])))
-
-    #         partMesh = pyrender.Mesh.from_trimesh(partTri, smooth=False)
-
-    #         parts.append((partMesh, partLabel))
     for iter, filename in enumerate(sorted_names):
         if filename.endswith(".obj"):
             pfile = open(partPath+modelNum+'/'+filename)

@@ -8,17 +8,19 @@ import pyrender
 import random
 import sys
 
+
 class Part:
-    def __init__(self, mesh, originalPart = None, side = None, label = None):
+    def __init__(self, mesh, originalPart=None, side=None, label=None):
         self.mesh = copy.deepcopy(mesh)
-        if originalPart != None:
+        if originalPart is not None:
             self.side = originalPart.side
             self.label = originalPart.label
         else:
-            assert side != None
-            assert label != None
+            assert side is not None
+            assert label is not None
             self.side = side
             self.label = label
+
 
 class CollectionPart:
     def __init__(self):
@@ -51,18 +53,18 @@ class CollectionPart:
     def grouped(self, value):
         self._grouped = copy.deepcopy(value)
 
+
 class Model:
     def __init__(self, parts):
         self.parts = copy.deepcopy(parts)
         self.name = "default"
-    
+
     def getPartByLabel(self, label):
         for part in self.parts:
             if part.label == label:
                 return copy.deepcopy(part)
 
         return None
-
 
 
 class ModelPartsViewer:
@@ -121,7 +123,7 @@ def setRenderModeIndex(viewer, model, renderModeIndex):
 def showNewModelFromParts(viewer, parts):
     generatedChairModel = Model(parts)
     modelPartsViewer.models.append(generatedChairModel)
-    setModelIndex(viewer, len(modelPartsViewer.models)-1)
+    setModelIndex(viewer, len(modelPartsViewer.models) - 1)
 
 
 def viewNextModel(viewer):
@@ -162,22 +164,22 @@ def getRandomCollectionPart(partType):
     randomIndex = int(random.randrange(0, collectionSize))
     return modelPartsViewer.collections[partType][randomIndex]
 
+
 # API END
 
 # Takes random pieces from collection and puts them together in a mesh, replacing parts of a random chair
 def generateChair(viewer):
-
     # quick hack for getting the original number of models
     # use original model as a template, not the new generated one
     originalModelCount = len(sys.argv[1:])
     randomModelIndex = int(random.randrange(0, originalModelCount))
     randomModel = modelPartsViewer.models[randomModelIndex]
     chairParts = {
-        'seat': getRandomCollectionPart('seat'), 
+        'seat': getRandomCollectionPart('seat'),
         'back': getRandomCollectionPart('back'),
         'leg': getRandomCollectionPart('leg'),
         'arm rest': getRandomCollectionPart('arm rest')
-        }
+    }
 
     resultParts = []
     for part in randomModel.parts:
@@ -193,13 +195,14 @@ def generateChair(viewer):
             newPartMesh = newPart.left
 
         pUtils.scaleMeshAToB(newPartMesh, part.mesh)
-        pUtils.translateMeshAToB(newPartMesh, part.mesh)
+        pUtils.translateMeshAToB(newPartMesh, part.mesh, part.label)
 
-        resultParts.append(Part(mesh = newPartMesh, originalPart = part))
+        resultParts.append(Part(mesh=newPartMesh, originalPart=part))
 
     # show the new model made out of all parts we need
     # it will appear on the screen and will be appended to the end of the viewable collection
     showNewModelFromParts(viewer, resultParts)
+
 
 # Takes a screenshot of the present chair model and saves it to the folder.
 # Demonstrates how to turn model into a set of pixels.
@@ -215,7 +218,7 @@ def takeScreenshot(viewer):
     isGeneratedModel = currentModel.name == "default"
     modelDirectory = 'generated/'
     if not isGeneratedModel:
-        modelDirectory = currentModel.name+'/'        
+        modelDirectory = currentModel.name + '/'
 
     directory = os.path.join(directory, modelDirectory)
     if not os.path.exists(directory):
@@ -225,10 +228,10 @@ def takeScreenshot(viewer):
     rotations = [
         (0, 0, 0),  # front
         (0, np.pi, 0),  # back
-        (0, -np.pi/2, 0),  # left
-        (0, np.pi/2, 0),  # right
-        (np.pi/2, 0, 0),  # top
-        (-np.pi/2, 0, 0)  # bottom
+        (0, -np.pi / 2, 0),  # left
+        (0, np.pi / 2, 0),  # right
+        (np.pi / 2, 0, 0),  # top
+        (-np.pi / 2, 0, 0)  # bottom
     ]
 
     # each screenshot will have w,h,3 shape in returned array in the same order as the given rotations
@@ -264,4 +267,5 @@ def start():
         defaultScene.add(copy.deepcopy(part.mesh))
 
     pyrender.Viewer(defaultScene, registered_keys={
-                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 'x': takeScreenshot}, use_raymond_lighting=True)
+        'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair,
+        'x': takeScreenshot}, use_raymond_lighting=True)

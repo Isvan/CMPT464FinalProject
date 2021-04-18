@@ -1,3 +1,5 @@
+import string
+
 import numpy as np
 import pyrender
 import random
@@ -32,12 +34,13 @@ def scaleMeshAToB(meshA, meshB):
             pos += centera
 
 
-def translateMeshAToB(meshA, meshB):
+def translateMeshAToB(meshA: pyrender.mesh.Mesh, meshB: pyrender.mesh.Mesh, type: string) -> None:
     centroidA = meshA.centroid
     centroidB = meshB.centroid
 
     translationVector = centroidB - centroidA
-
+    if type == "leg":
+        translationVector[1] += 0.05
     for primitive in meshA.primitives:
         for pos in primitive.positions:
             pos += translationVector
