@@ -1,4 +1,7 @@
 import copy
+
+import trimesh.registration
+
 import ModelPartsScreenshot as mps
 import numpy as np
 import os
@@ -194,6 +197,10 @@ def generateChair(viewer):
         else:
             newPartMesh = newPart.left
 
+        try:
+            (_, newPartMesh.primitives[0].positions, _) = trimesh.registration.icp(a=newPartMesh.primitives[0].positions, b=part.mesh.primitives[0].positions, max_iterations=30)
+        except Exception as e:
+            print(type(e))
         pUtils.scaleMeshAToB(newPartMesh, part.mesh)
         pUtils.translateMeshAToB(newPartMesh, part.mesh, part.label)
 

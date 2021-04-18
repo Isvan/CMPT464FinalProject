@@ -1,11 +1,11 @@
 import random
 import sys
-
+import string
 import DatasetUtils as dt
 import ModelPartsViewer as mpv
 
 
-def parseDatasetChairTuples(modelIndex, partsTuples, collections) -> list:
+def parseDatasetChairTuples(modelIndex: string, partsTuples: list, collections: dict) -> list:
     modelParts = []
     partsDictionary = {}
     for partMesh, partSide, partLabel in partsTuples:

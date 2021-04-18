@@ -23,8 +23,8 @@ def scaleMeshAToB(meshA, meshB):
     extentsA = meshA.extents
     extentsB = meshB.extents
     centera = meshA.centroid
-    scale = [extentsB[0]/extentsA[0], extentsB[1] /
-             extentsA[1], extentsB[2]/extentsA[2]]
+    scale = [extentsB[0] / extentsA[0], extentsB[1] /
+             extentsA[1], extentsB[2] / extentsA[2]]
     for primitive in meshA.primitives:
         for pos in primitive.positions:
             pos -= centera
@@ -45,6 +45,7 @@ def translateMeshAToB(meshA: pyrender.mesh.Mesh, meshB: pyrender.mesh.Mesh, type
         for pos in primitive.positions:
             pos += translationVector
 
+
 # https://computergraphics.stackexchange.com/questions/8195/how-to-convert-euler-angles-to-quaternions-and-get-the-same-euler-angles-back-fr
 
 
@@ -52,14 +53,14 @@ def radEuler2Quat(vec3):
     x = vec3[0]
     y = vec3[1]
     z = vec3[2]
-    qx = np.sin(x/2) * np.cos(y/2) * np.cos(z/2) - \
-        np.cos(x/2) * np.sin(y/2) * np.sin(z/2)
-    qy = np.cos(x/2) * np.sin(y/2) * np.cos(z/2) + \
-        np.sin(x/2) * np.cos(y/2) * np.sin(z/2)
-    qz = np.cos(x/2) * np.cos(y/2) * np.sin(z/2) - \
-        np.sin(x/2) * np.sin(y/2) * np.cos(z/2)
-    qw = np.cos(x/2) * np.cos(y/2) * np.cos(z/2) + \
-        np.sin(x/2) * np.sin(y/2) * np.sin(z/2)
+    qx = np.sin(x / 2) * np.cos(y / 2) * np.cos(z / 2) - \
+         np.cos(x / 2) * np.sin(y / 2) * np.sin(z / 2)
+    qy = np.cos(x / 2) * np.sin(y / 2) * np.cos(z / 2) + \
+         np.sin(x / 2) * np.cos(y / 2) * np.sin(z / 2)
+    qz = np.cos(x / 2) * np.cos(y / 2) * np.sin(z / 2) - \
+         np.sin(x / 2) * np.sin(y / 2) * np.cos(z / 2)
+    qw = np.cos(x / 2) * np.cos(y / 2) * np.cos(z / 2) + \
+         np.sin(x / 2) * np.sin(y / 2) * np.sin(z / 2)
 
     return [qx, qy, qz, qw]
 
@@ -69,9 +70,9 @@ def clamp(num, minVal, maxVal):
 
 
 def lerp(a, b, t):
-    return t * a + (1-t) * b
+    return t * a + (1 - t) * b
 
 
 def inverseLerp(a, b, value):
-    num = (value-a)/(b-a)
+    num = (value - a) / (b - a)
     return clamp(num, 0, 1)
