@@ -68,7 +68,8 @@ def setSceneMeshes(scene, parts):
     for part in parts:
         # we never manipulate meshes in the scene, only construct new ones
         # therefore, copying it is much safer because now we can access the "current mesh" parts
-        scene.add(copy.deepcopy(part.mesh))
+        partMesh = pyrender.Mesh.from_trimesh(part.mesh, smooth=False)
+        scene.add(partMesh)
 
 def setViewerSceneMeshes(viewer, parts):
     viewer.render_lock.acquire()
