@@ -101,5 +101,5 @@ if __name__ == "__main__":
 
     # set models in a viewer
     mpv.setCollections(collections)
-    mpv.setModels(chairsToDisplay)
+    mpv.setInputModels(chairsToDisplay)
     mpv.start()

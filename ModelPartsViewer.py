@@ -21,6 +21,13 @@ class Part:
             self.side = side
             self.label = label
             self.groupedParts = []
+       
+    def getSide(self, side):
+        assert len(self.groupedParts) > 0
+        for part in self.groupedParts:
+            if part.side == side:
+                return copy.deepcopy(part)
+        return None
     
     @property
     def isGroupedOnly(self):
@@ -30,37 +37,6 @@ class Part:
     def hasGroupedParts(self):
         return self.side == 'grouped' and len(self.groupedParts) > 0
 
-class CollectionPart:
-    def __init__(self):
-        self.left = None
-        self.right = None
-        self.grouped = None
-        self.label = None
-        self.isGroupedOnly = False
-
-    @property
-    def left(self):
-        return copy.deepcopy(self._left)
-
-    @left.setter
-    def left(self, value):
-        self._left = copy.deepcopy(value)
-
-    @property
-    def right(self):
-        return copy.deepcopy(self._right)
-
-    @right.setter
-    def right(self, value):
-        self._right = copy.deepcopy(value)
-
-    @property
-    def grouped(self):
-        return copy.deepcopy(self._grouped)
-
-    @grouped.setter
-    def grouped(self, value):
-        self._grouped = copy.deepcopy(value)
 
 class Model:
     def __init__(self, parts):
@@ -77,7 +53,7 @@ class Model:
 class ModelPartsViewer:
     def __init__(self):
         self.models = []
-        self.collections = {}
+        self.inputModels = []
         self.renderMode = 0
         self.viewerModelIndex = 0
 
@@ -85,12 +61,9 @@ class ModelPartsViewer:
 modelPartsViewer = ModelPartsViewer()
 
 
-def setModels(models):
+def setInputModels(models):
+    modelPartsViewer.inputModels = copy.deepcopy(models)
     modelPartsViewer.models = copy.deepcopy(models)
-
-
-def setCollections(collections):
-    modelPartsViewer.collections = copy.deepcopy(collections)
 
 def setSceneMeshes(scene, parts):
     # Remove all the current meshes
@@ -163,12 +136,16 @@ def viewPrevPart(viewer):
 
 
 def getRandomCollectionPart(partType):
-    collectionSize = len(modelPartsViewer.collections[partType])
-    if collectionSize == 0:
-        return None
-
-    randomIndex = int(random.randrange(0, collectionSize))
-    return modelPartsViewer.collections[partType][randomIndex]
+    shuffledModels = modelPartsViewer.inputModels.copy()
+    random.shuffle(shuffledModels)
+    requiredPart = None
+    for model in shuffledModels:
+        requiredPart = model.getPartByLabel(partType)
+        if requiredPart != None:
+            break
+    
+    return requiredPart
+    
 
 # API END
 
@@ -195,7 +172,7 @@ def generateChair(viewer):
         # same goes if the picked part can be a whole mesh only 
         if newPart.isGroupedOnly or part.isGroupedOnly:
             # the part.mesh is by default a combined mesh
-            meshToAppend = newPart.grouped
+            meshToAppend = newPart.mesh
             pUtils.scaleMeshAToB(meshToAppend, part.mesh)
             pUtils.translateMeshAToB(meshToAppend, part.mesh)
             resultParts.append(Part(mesh = meshToAppend, originalPart = part))
@@ -205,9 +182,9 @@ def generateChair(viewer):
         for part in part.groupedParts:
             meshToAppend = None
             if part.side == 'right':
-                meshToAppend = newPart.right
+                meshToAppend = newPart.getSide('right').mesh
             else:
-                meshToAppend = newPart.left
+                meshToAppend = newPart.getSide('left').mesh
             
             pUtils.scaleMeshAToB(meshToAppend, part.mesh)
             pUtils.translateMeshAToB(meshToAppend, part.mesh)
