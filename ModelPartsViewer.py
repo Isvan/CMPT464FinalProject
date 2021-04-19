@@ -9,18 +9,16 @@ import random
 import sys
 
 class Part:
-    def __init__(self, mesh, originalPart = None, side = None, label = None):
+    def __init__(self, mesh, label = None, side = None):
         self.mesh = copy.deepcopy(mesh)
-        if originalPart != None:
-            self.side = originalPart.side
-            self.label = originalPart.label
-            self.groupedParts = copy.deepcopy(originalPart.groupedParts)
-        else:
-            assert side != None
-            assert label != None
-            self.side = side
+        if label != None:
             self.label = label
-            self.groupedParts = []
+        
+        if side != None:
+            self.side = side
+
+        self.groupedParts = []
+            
        
     def getSide(self, side):
         assert len(self.groupedParts) > 0
@@ -31,13 +29,8 @@ class Part:
     
     @property
     def isGroupedOnly(self):
-        return self.side == 'grouped' and len(self.groupedParts) <= 0
+        return len(self.groupedParts) <= 0
     
-    @property
-    def hasGroupedParts(self):
-        return self.side == 'grouped' and len(self.groupedParts) > 0
-
-
 class Model:
     def __init__(self, parts):
         self.parts = copy.deepcopy(parts)
@@ -175,21 +168,21 @@ def generateChair(viewer):
             meshToAppend = newPart.mesh
             pUtils.scaleMeshAToB(meshToAppend, part.mesh)
             pUtils.translateMeshAToB(meshToAppend, part.mesh)
-            resultParts.append(Part(mesh = meshToAppend, originalPart = part))
+            resultParts.append(Part(mesh = meshToAppend))
             continue
             
         # otherwise, collection part has left and right and given part has extra parts within
-        for part in part.groupedParts:
+        for groupedPart in part.groupedParts:
             meshToAppend = None
-            if part.side == 'right':
+            if groupedPart.side == 'right':
                 meshToAppend = newPart.getSide('right').mesh
             else:
                 meshToAppend = newPart.getSide('left').mesh
             
-            pUtils.scaleMeshAToB(meshToAppend, part.mesh)
-            pUtils.translateMeshAToB(meshToAppend, part.mesh)
+            pUtils.scaleMeshAToB(meshToAppend, groupedPart.mesh)
+            pUtils.translateMeshAToB(meshToAppend, groupedPart.mesh)
 
-            resultParts.append(Part(mesh = meshToAppend, originalPart = part))
+            resultParts.append(Part(mesh = meshToAppend))
 
     # show the new model made out of all parts we need
     # it will appear on the screen and will be appended to the end of the viewable collection
