@@ -14,11 +14,19 @@ class Part:
         if originalPart != None:
             self.side = originalPart.side
             self.label = originalPart.label
+            self.groupedParts = copy.deepcopy(originalPart.groupedParts)
         else:
             assert side != None
             assert label != None
             self.side = side
             self.label = label
+            self.groupedParts = []
+    
+    def isGroupedOnly(self):
+        return self.side == 'grouped' and len(self.groupedParts) <= 0
+    
+    def hasGroupedParts(self):
+        return self.side == 'grouped' and len(self.groupedParts) > 0
 
 class CollectionPart:
     def __init__(self):
@@ -26,6 +34,7 @@ class CollectionPart:
         self.right = None
         self.grouped = None
         self.label = None
+        self.isGroupedOnly = False
 
     @property
     def left(self):
@@ -62,8 +71,6 @@ class Model:
                 return copy.deepcopy(part)
 
         return None
-
-
 
 class ModelPartsViewer:
     def __init__(self):
