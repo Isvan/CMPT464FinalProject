@@ -92,29 +92,28 @@ def setModels(models):
 def setCollections(collections):
     modelPartsViewer.collections = copy.deepcopy(collections)
 
-
-def setSceneMeshes(viewer, parts):
-    viewer.render_lock.acquire()
-
+def setSceneMeshes(scene, parts):
     # Remove all the current meshes
-    meshNodes = list(viewer.scene.mesh_nodes)
+    meshNodes = list(scene.mesh_nodes)
     for meshNode in meshNodes:
-        viewer.scene.remove_node(meshNode)
+        scene.remove_node(meshNode)
 
     # Add all the new meshes
     for part in parts:
         # we never manipulate meshes in the scene, only construct new ones
         # therefore, copying it is much safer because now we can access the "current mesh" parts
-        viewer.scene.add(copy.deepcopy(part.mesh))
+        scene.add(copy.deepcopy(part.mesh))
 
+def setViewerSceneMeshes(viewer, parts):
+    viewer.render_lock.acquire()
+    setSceneMeshes(viewer.scene, parts)
     viewer.render_lock.release()
-
 
 def setModelIndex(viewer, index):
     modelPartsViewer.viewerModelIndex = index
     modelPartsViewer.renderMode = 0
     allModelParts = modelPartsViewer.models[index].parts
-    setSceneMeshes(viewer, allModelParts)
+    setViewerSceneMeshes(viewer, allModelParts)
 
 
 def setRenderModeIndex(viewer, model, renderModeIndex):
@@ -122,9 +121,9 @@ def setRenderModeIndex(viewer, model, renderModeIndex):
 
     partToView = renderModeIndex - 1
     if partToView == -1:
-        setSceneMeshes(viewer, model.parts)
+        setViewerSceneMeshes(viewer, model.parts)
     else:
-        setSceneMeshes(viewer, [model.parts[partToView]])
+        setViewerSceneMeshes(viewer, [model.parts[partToView]])
 
 
 def showNewModelFromParts(viewer, parts):
@@ -278,8 +277,7 @@ def start():
 
     defaultModel = modelPartsViewer.models[0]
     defaultScene = pyrender.Scene()
-    for part in defaultModel.parts:
-        defaultScene.add(copy.deepcopy(part.mesh))
+    setSceneMeshes(defaultScene, defaultModel.parts)
 
     pyrender.Viewer(defaultScene, registered_keys={
                     'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 'x': takeScreenshot}, use_raymond_lighting=True)
