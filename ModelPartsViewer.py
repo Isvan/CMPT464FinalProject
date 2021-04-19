@@ -22,9 +22,11 @@ class Part:
             self.label = label
             self.groupedParts = []
     
+    @property
     def isGroupedOnly(self):
         return self.side == 'grouped' and len(self.groupedParts) <= 0
     
+    @property
     def hasGroupedParts(self):
         return self.side == 'grouped' and len(self.groupedParts) > 0
 
@@ -190,19 +192,28 @@ def generateChair(viewer):
     for part in randomModel.parts:
         newPart = chairParts[part.label]
 
-        # there are three total sided-ness: grouped, left and right
-        newPartMesh = None
-        if part.side == 'grouped':
-            newPartMesh = newPart.grouped
-        elif part.side == 'right':
-            newPartMesh = newPart.right
-        else:
-            newPartMesh = newPart.left
+        # if randomly picked mesh is a whole single mesh, then we should just place that mesh in stead of all non-combined present parts
+        # same goes if the picked part can be a whole mesh only 
+        if newPart.isGroupedOnly or part.isGroupedOnly:
+            # the part.mesh is by default a combined mesh
+            meshToAppend = newPart.grouped
+            pUtils.scaleMeshAToB(meshToAppend, part.mesh)
+            pUtils.translateMeshAToB(meshToAppend, part.mesh)
+            resultParts.append(Part(mesh = meshToAppend, originalPart = part))
+            continue
+            
+        # otherwise, collection part has left and right and given part has extra parts within
+        for part in part.groupedParts:
+            meshToAppend = None
+            if part.side == 'right':
+                meshToAppend = newPart.right
+            else:
+                meshToAppend = newPart.left
+            
+            pUtils.scaleMeshAToB(meshToAppend, part.mesh)
+            pUtils.translateMeshAToB(meshToAppend, part.mesh)
 
-        pUtils.scaleMeshAToB(newPartMesh, part.mesh)
-        pUtils.translateMeshAToB(newPartMesh, part.mesh)
-
-        resultParts.append(Part(mesh = newPartMesh, originalPart = part))
+            resultParts.append(Part(mesh = meshToAppend, originalPart = part))
 
     # show the new model made out of all parts we need
     # it will appear on the screen and will be appended to the end of the viewable collection
