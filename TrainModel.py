@@ -8,59 +8,10 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
-import NNModels
-import chairs_dataset
 
-from config import *
-
-
-def setTrainingData(data):
-    return tf.keras.preprocessing.image_dataset_from_directory(
-        data,
-        validation_split=0.2,
-        subset="training",
-        # color_mode="grayscale",
-        seed=seed,
-        image_size=(img_height, img_width),
-        batch_size=batch_size)
-
-
-def setValidationData(data):
-    return tf.keras.preprocessing.image_dataset_from_directory(
-        data,
-        validation_split=0.2,
-        # color_mode="grayscale",
-        subset="validation",
-        seed=seed,
-        image_size=(img_height, img_width),
-        batch_size=batch_size)
-
-
-def getTrainingDataTuples():
-
-    dirname = os.path.dirname(__file__)
-    dataTop = os.path.join(dirname, "..", "..", "dataset", "imageData", "chairs-data",
-                           "ourChairData", "chairs-Top")
-    dataSide = os.path.join(dirname, "..", "..", "dataset", "imageData", "chairs-data",
-                            "ourChairData", "chairs-Side")
-    dataFront = os.path.join(dirname, "..", "..", "dataset", "imageData", "chairs-data",
-                             "ourChairData", "chairs-Front")
-
-    seed = 1337
-
-    # TOP VIEWS
-    train_ds_top = setTrainingData(dataTop)
-    val_ds_top = setValidationData(dataTop)
-
-    # SIDE VIEWS
-    train_ds_side = setTrainingData(dataSide)
-    val_ds_side = setValidationData(dataSide)
-
-    # FRONT VIEWS
-    train_ds_front = setTrainingData(dataFront)
-    val_ds_front = setValidationData(dataFront)
-
-    return [(train_ds_top, val_ds_top), (train_ds_side, val_ds_side), (train_ds_front, val_ds_front)]
+import ML.ourML.NNModels as nnModels
+import ML.ourML.chairs_dataset as chairsDataset
+from MLStatics import *
 
 
 def printGraphOfResults(history, title):
@@ -91,8 +42,8 @@ def printGraphOfResults(history, title):
 
 def runTripleSingleNN():
     # Need for identifcation later on
-    models = [NNModels.getSingleViewModelSingleDim(), NNModels.getSingleViewModelSingleDim(),
-              NNModels.getSingleViewModelSingleDim()]
+    models = [nnModels.getSingleViewModelSingleDim(), nnModels.getSingleViewModelSingleDim(),
+              nnModels.getSingleViewModelSingleDim()]
     # trainingData = getTrainingDataTuples()
     # print(trainingData)
     index = 0
@@ -100,7 +51,7 @@ def runTripleSingleNN():
     if not os.path.exists(graphResultsFolder):
         os.makedirs(graphResultsFolder)
 
-    imagesTop, imagesFront, imagesSide, topLabel, frontLabel, sideLabel = chairs_dataset.load(
+    imagesTop, imagesFront, imagesSide, topLabel, frontLabel, sideLabel = chairsDataset.load(
         img_height)
 
     # ["Top", "Side", "Front"]
@@ -111,8 +62,8 @@ def runTripleSingleNN():
     for data, label in trainingData:
 
         model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-            filepath=checkpointFilepath +
-            dataTitlesTripleView[index]+"/checkpoint",
+            filepath=os.path.join(checkpointFilepath +
+                                  dataTitlesTripleView[index], "checkpoint", ""),
             save_weights_only=True,
             # monitor='val_accuracy',
             # mode='auto',
@@ -136,25 +87,22 @@ def runTripleSingleNN():
 
 def runSingleTripleBranchNN():
     # Need for identifcation later on
-    model = NNModels.getMultiViewModel()
+    model = nnModels.getMultiViewModel()
 
-    checkPoint = tf.train.latest_checkpoint(
-        checkpointFilepath + "tripleView"+"")
+    checkPoint = tf.train.latest_checkpoint(os.path.join(
+        checkpointFilepath, "tripleView"))
     if(checkPoint):
         model.load_weights(checkPoint)
-
-    print("CheckPoints")
-    print(checkPoint)
 
     if not os.path.exists(graphResultsFolder):
         os.makedirs(graphResultsFolder)
 
-    imagesTop, imagesFront, imagesSide, topLabel, frontLabel, sideLabel = chairs_dataset.load(
+    imagesTop, imagesFront, imagesSide, topLabel, frontLabel, sideLabel = chairsDataset.load(
         img_height)
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpointFilepath +
-        "tripleView"+"/checkpoint",
+        filepath=os.path.join(
+            checkpointFilepath, "tripleView", "checkpoint"),
         save_weights_only=True,
         # monitor='val_accuracy',
         # mode='auto',

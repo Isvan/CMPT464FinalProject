@@ -7,7 +7,10 @@ import DatasetViewerApp as dva
 import ModelPartsScreenshot as mps
 import ModelPartsViewer as mpv
 import ProjectUtils as pUtils
-import Scorer as scorer
+from Scorer import Scorer
+
+from MLStatics import *
+
 
 def getRandomCollectionPart(partType, collections):
     collectionSize = len(collections[partType])
@@ -17,15 +20,16 @@ def getRandomCollectionPart(partType, collections):
     randomIndex = int(random.randrange(0, collectionSize))
     return collections[partType][randomIndex]
 
+
 def generateChair(models, collections):
     randomModelIndex = int(random.randrange(0, len(models)))
     randomModel = models[randomModelIndex]
     chairParts = {
-        'seat': getRandomCollectionPart('seat', collections), 
+        'seat': getRandomCollectionPart('seat', collections),
         'back': getRandomCollectionPart('back', collections),
         'leg': getRandomCollectionPart('leg', collections),
         'arm rest': getRandomCollectionPart('arm rest', collections)
-        }
+    }
 
     resultParts = []
     for part in randomModel.parts:
@@ -43,7 +47,7 @@ def generateChair(models, collections):
         pUtils.scaleMeshAToB(newPartMesh, part.mesh)
         pUtils.translateMeshAToB(newPartMesh, part.mesh)
 
-        resultParts.append(mpv.Part(mesh = newPartMesh, originalPart = part))
+        resultParts.append(mpv.Part(mesh=newPartMesh, originalPart=part))
     return mpv.Model(resultParts)
 
 
@@ -54,42 +58,46 @@ if __name__ == "__main__":
     for i in range(sourceChairCount):
         randomIndex = int(random.randrange(1, 6201))
         datasetIndices.append(str(randomIndex))
-    
+
     models = []
-    collections = {'back': [], 'seat':[], 'leg': [], 'arm rest': []}
+    collections = {'back': [], 'seat': [], 'leg': [], 'arm rest': []}
     for index in datasetIndices:
         partsTuples = dt.getDatasetObjParts(index)
-        modelParts = dva.parseDatasetChairTuples(index, partsTuples, collections)
+        modelParts = dva.parseDatasetChairTuples(
+            index, partsTuples, collections)
         model = mpv.Model(modelParts)
         model.name = str(index)
         models.append(model)
-    
+
     # generate 10 new chairs
     generatedChairCount = 10
     newChairs = []
-    for i in range(generatedChairCount):
+    for i in progressbar(range(generatedChairCount), "Generating Chairs"):
         newChair = generateChair(models, collections)
         newChairs.append(newChair)
-    
+
     # screenshot every new chair
     rotations = [
-        (0, 0, 0),  # front
-        (0, np.pi, 0),  # back
-        (0, -np.pi/2, 0),  # left
-        (0, np.pi/2, 0),  # right
         (np.pi/2, 0, 0),  # top
-        (-np.pi/2, 0, 0)  # bottom
+        (0, np.pi/2, 0),  # right
+        (0, 0, 0),  # front
+        # (0, np.pi, 0),  # back
+        # (0, -np.pi/2, 0),  # left
+        # (-np.pi/2, 0, 0)  # bottom
     ]
 
     depthScreenshots = []
     for generatedChair in newChairs:
-        perspectives = mps.captureDepth(generatedChair, rotations, imageWidth=224, imageHeight=224)
+        perspectives = mps.captureDepth(
+            generatedChair, rotations, imageWidth=224, imageHeight=224)
         depthScreenshots.append((generatedChair, perspectives))
+
+    s = Scorer()
 
     # Assign a score
     scoredChairs = []
-    for generatedChair, perspectives in depthScreenshots:
-        score = scorer.score(perspectives)
+    for generatedChair, perspectives in progressbar(depthScreenshots, "Evaluating Chairs"):
+        score = s.score(perspectives)
         scoredChairs.append((generatedChair, score))
 
     # sort models depending on the score, from bigger to smaller

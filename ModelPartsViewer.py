@@ -7,9 +7,11 @@ import ProjectUtils as pUtils
 import pyrender
 import random
 import sys
+from Scorer import Scorer
+
 
 class Part:
-    def __init__(self, mesh, originalPart = None, side = None, label = None):
+    def __init__(self, mesh, originalPart=None, side=None, label=None):
         self.mesh = copy.deepcopy(mesh)
         if originalPart != None:
             self.side = originalPart.side
@@ -19,6 +21,7 @@ class Part:
             assert label != None
             self.side = side
             self.label = label
+
 
 class CollectionPart:
     def __init__(self):
@@ -51,11 +54,12 @@ class CollectionPart:
     def grouped(self, value):
         self._grouped = copy.deepcopy(value)
 
+
 class Model:
     def __init__(self, parts):
         self.parts = copy.deepcopy(parts)
         self.name = "default"
-    
+
     def getPartByLabel(self, label):
         for part in self.parts:
             if part.label == label:
@@ -64,13 +68,13 @@ class Model:
         return None
 
 
-
 class ModelPartsViewer:
     def __init__(self):
         self.models = []
         self.collections = {}
         self.renderMode = 0
         self.viewerModelIndex = 0
+        self.scorer = Scorer()
 
 
 modelPartsViewer = ModelPartsViewer()
@@ -165,6 +169,8 @@ def getRandomCollectionPart(partType):
 # API END
 
 # Takes random pieces from collection and puts them together in a mesh, replacing parts of a random chair
+
+
 def generateChair(viewer):
 
     # quick hack for getting the original number of models
@@ -173,11 +179,11 @@ def generateChair(viewer):
     randomModelIndex = int(random.randrange(0, originalModelCount))
     randomModel = modelPartsViewer.models[randomModelIndex]
     chairParts = {
-        'seat': getRandomCollectionPart('seat'), 
+        'seat': getRandomCollectionPart('seat'),
         'back': getRandomCollectionPart('back'),
         'leg': getRandomCollectionPart('leg'),
         'arm rest': getRandomCollectionPart('arm rest')
-        }
+    }
 
     resultParts = []
     for part in randomModel.parts:
@@ -195,7 +201,7 @@ def generateChair(viewer):
         pUtils.scaleMeshAToB(newPartMesh, part.mesh)
         pUtils.translateMeshAToB(newPartMesh, part.mesh)
 
-        resultParts.append(Part(mesh = newPartMesh, originalPart = part))
+        resultParts.append(Part(mesh=newPartMesh, originalPart=part))
 
     # show the new model made out of all parts we need
     # it will appear on the screen and will be appended to the end of the viewable collection
@@ -203,6 +209,8 @@ def generateChair(viewer):
 
 # Takes a screenshot of the present chair model and saves it to the folder.
 # Demonstrates how to turn model into a set of pixels.
+
+
 def takeScreenshot(viewer):
     currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
 
@@ -215,7 +223,7 @@ def takeScreenshot(viewer):
     isGeneratedModel = currentModel.name == "default"
     modelDirectory = 'generated/'
     if not isGeneratedModel:
-        modelDirectory = currentModel.name+'/'        
+        modelDirectory = currentModel.name+'/'
 
     directory = os.path.join(directory, modelDirectory)
     if not os.path.exists(directory):
@@ -254,6 +262,98 @@ def takeScreenshot(viewer):
     im.save(os.path.join(directory, 'bottom.png'))
 
 
+def evalCurrentChair(viewer):
+    currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
+
+    # initialize perspectives
+    rotations = [
+        (0, 0, 0),  # front
+        (0, np.pi/2, 0),  # right
+        (np.pi/2, 0, 0),  # top
+    ]
+
+    # each screenshot will have w,h,3 shape in returned array in the same order as the given rotations
+    perspectives = mps.captureDepth(
+        currentModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
+
+    score = modelPartsViewer.scorer.score(perspectives)
+
+    print("Evaluator Gave the Chair a score of " + str(score))
+    pass
+
+
+def takePositiveScreenShot(viewer):
+    currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
+
+    outputDir = "dataset/imageData/chairs-data/positive/"
+
+    # initialize perspectives
+    rotations = [
+        (0, 0, 0),  # front
+        (0, np.pi/2, 0),  # right
+        (np.pi/2, 0, 0),  # top
+    ]
+
+    # each screenshot will have w,h,3 shape in returned array in the same order as the given rotations
+    perspectives = mps.captureDepth(
+        currentModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
+
+    currentIndex = len(os.listdir(outputDir))
+    currentIndex += 1
+
+    im = Image.fromarray(perspectives[0])
+    im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
+
+    currentIndex += 1
+
+    im = Image.fromarray(perspectives[1])
+    im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
+
+    currentIndex += 1
+
+    im = Image.fromarray(perspectives[2])
+    im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
+    print("Saved as a Positive Chair")
+    generateChair(viewer)
+    pass
+
+
+def takeNegativeScreenShot(viewer):
+    currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
+
+    outputDir = "dataset/imageData/chairs-data/negative/"
+
+    # initialize perspectives
+    rotations = [
+        (0, 0, 0),  # front
+        (0, np.pi/2, 0),  # right
+        (np.pi/2, 0, 0),  # top
+    ]
+
+    # each screenshot will have w,h,3 shape in returned array in the same order as the given rotations
+    perspectives = mps.captureDepth(
+        currentModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
+
+    currentIndex = len(os.listdir(outputDir))
+    currentIndex += 1
+
+    im = Image.fromarray(perspectives[0])
+    im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
+
+    currentIndex += 1
+
+    im = Image.fromarray(perspectives[1])
+    im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
+
+    currentIndex += 1
+
+    im = Image.fromarray(perspectives[2])
+    im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
+    print("Saved as a Negative Chair")
+    generateChair(viewer)
+    pass
+
+
 def start():
     modelPartsViewer.renderMode = 0
     modelPartsViewer.viewerModelIndex = 0
@@ -264,4 +364,4 @@ def start():
         defaultScene.add(copy.deepcopy(part.mesh))
 
     pyrender.Viewer(defaultScene, registered_keys={
-                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 'x': takeScreenshot}, use_raymond_lighting=True)
+                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 'x': takeScreenshot, 'y': takePositiveScreenShot, 'n': takeNegativeScreenShot, 'e': evalCurrentChair}, use_raymond_lighting=True)

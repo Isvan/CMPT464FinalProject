@@ -2,7 +2,7 @@ import cv2
 import os
 import numpy as np
 
-from config import *
+from MLStatics import *
 
 '''
 load chair dataset. Dimension refers to the target dimension of the output image, used to save up memory.
@@ -22,7 +22,7 @@ def load(dimension):
 
     ls = 0
 
-    for id, folder in enumerate(["../../dataset/imageData/chairs-data/positive/", "../../dataset/imageData/chairs-data/negative/"]):
+    for id, folder in enumerate([os.path.join(trainingDataLocation, "positive"), os.path.join(trainingDataLocation, "negative")]):
         isPositive = not isPositive
 
         length = len(os.listdir(folder)) // 3
@@ -32,7 +32,7 @@ def load(dimension):
 
             view = int(filename.split(".")[0])
             view = view % 3
-            img = cv2.imread(folder+filename)
+            img = cv2.imread(os.path.join(folder, filename))
             if dimension < 224:
                 img = cv2.resize(img, dsize=(dimension, dimension),
                                  interpolation=cv2.INTER_CUBIC)
@@ -63,11 +63,6 @@ def load(dimension):
     imagesFront = np.array(imagesFront)
     imagesSide = np.array(imagesSide)
 
-    # flatten the images
-    #imagesTop = np.reshape(imagesTop, (ls, dimension * dimension))
-    #imagesFront = np.reshape(imagesFront, (ls, dimension * dimension))
-    #imagesSide = np.reshape(imagesSide, (ls, dimension * dimension))
-
     seed = 547
     np.random.seed(seed)
     np.random.shuffle(imagesTop)
@@ -92,4 +87,3 @@ def runtime_load_test():
     imagesTop, imagesFront, imagesSide, y_vec_top, y_vec_front, y_vec_side = load(
         56)
     print("--- %s min ---" % ((time.time() - start_time) / 60))
-    # print(imagesTop.shape[0])

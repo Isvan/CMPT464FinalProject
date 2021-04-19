@@ -7,8 +7,8 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 
-from config import *
-import NNModels
+from MLStatics import *
+import ML.ourML.NNModels as nnModels
 
 # Taken directly from sample code
 
@@ -60,17 +60,16 @@ def load(dimension):
     imagesSide = []
     imagesFront = []
     ls = 0
-    folder = "../../dataset/imageData/evaluate-chairs/"
 
-    length = len(os.listdir(folder)) // 3
+    length = len(os.listdir(evalDataLocation)) // 3
     ls += length
 
-    for filename in os.listdir(folder):
+    for filename in os.listdir(evalDataLocation):
 
         view = int(filename.split(".")[0])
         view = view % 3
 
-        img = cv2.imread(folder+filename)
+        img = cv2.imread(evalDataLocation+filename)
         if dimension < 224:
             img = cv2.resize(img, dsize=(dimension, dimension),
                              interpolation=cv2.INTER_CUBIC)
@@ -92,23 +91,12 @@ def load(dimension):
     imagesFront = np.array(imagesFront)
     imagesSide = np.array(imagesSide)
 
-    # flatten the images
-    #imagesTop = np.reshape(imagesTop, (ls, dimension * dimension))
-    #imagesFront = np.reshape(imagesFront, (ls, dimension * dimension))
-    #imagesSide = np.reshape(imagesSide, (ls, dimension * dimension))
-
     return imagesTop, imagesFront, imagesSide
 
 
 def evalTripleSingleView():
     # Create the models
-
     imagesTop, imagesFront, imagesSide = load(img_height)
-
-    #imagesTop, imagesFront, imagesSide = getEvalData()
-
-    testInputLayer = NNModels.getMultiViewModel()
-
     evalData = {}
     evalData["Top"] = imagesTop
     evalData["Front"] = imagesFront
@@ -117,9 +105,9 @@ def evalTripleSingleView():
     class_names = ["Positive", "Negative"]
 
     # Fill the models with the trained weights from the checkpoints
-    # This is a temp thing as you would need to download weights and put them into a checkpoints folder/ run the trainer
+    # This is a temp thing as you would need to download weights and put them into a checkpoints folder / run the trainer
     for view in dataTitlesTripleView:
-        model = NNModels.getSingleViewModelSingleDim()
+        model = nnModels.getSingleViewModelSingleDim()
         model.load_weights(checkpointFilepath +
                            view+"/checkpoint")
 
@@ -140,24 +128,27 @@ def evalTripleMultieView():
 
     imagesTop, imagesFront, imagesSide = load(img_height)
 
-    class_names = ["Positive", "Negative"]
+    class_names = ["Negative", "Positive"]
 
     # Fill the models with the trained weights from the checkpoints
-    # This is a temp thing as you would need to download weights and put them into a checkpoints folder/ run the trainer
-
-    model = NNModels.getMultiViewModel()
+    # This is a temp thing as you would need to download weights and put them into a checkpoints folder / run the trainer
+    model = nnModels.getMultiViewModel()
     model.load_weights(checkpointFilepath +
                        "tripleView"+"/checkpoint")
 
     predictions = model.predict([imagesTop, imagesSide, imagesFront])
     index = 0
     for pred in predictions:
+        print(pred)
+        print("---------------------------------")
         print("{:.2f} : {:.2f} ".format(pred[0], pred[1]))
         score = tf.nn.softmax(pred)
         print(
             "{} : {} with a {:.2f} percent confidence."
             .format(index, class_names[np.argmax(score)], 100 * np.max(score))
         )
+
+        print("---------------------------------")
         index += 1
 
 
