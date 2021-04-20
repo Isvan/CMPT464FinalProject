@@ -1,6 +1,8 @@
 import numpy as np
+import os
 import random
 import sys
+import trimesh
 
 import DatasetUtils as dt
 import DatasetViewerApp as dva
@@ -64,6 +66,23 @@ if __name__ == "__main__":
     for chair, value in sortedChairs:
         print(value)
         chairsToDisplay.append(chair)
+
+    # export the chairs as .objs
+    directory = os.path.dirname('export_objs/')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    
+    for i in range(len(chairsToDisplay)):
+        path = os.path.join(directory, str(i)+'.obj')
+        chairParts = chairsToDisplay[i].parts
+        resultCombinedMesh = trimesh.base.Trimesh()
+        for part in chairParts:
+           resultCombinedMesh = trimesh.util.concatenate([resultCombinedMesh, part.mesh])
+
+        chairObj = trimesh.exchange.obj.export_obj(resultCombinedMesh)
+        f = open(path, "w")
+        f.write(chairObj)
+        f.close()
 
     # set models in a viewer
     mpv.setInputModels(chairsToDisplay)
