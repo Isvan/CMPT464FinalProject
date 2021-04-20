@@ -4,6 +4,7 @@ virtual*
 dataset/__pycache__
 dataset/Chair
 screenshots
+export_objs
 
 #ML Stuff
 *.bmp

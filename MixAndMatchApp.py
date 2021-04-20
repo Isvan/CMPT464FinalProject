@@ -1,6 +1,8 @@
 import numpy as np
+import os
 import random
 import sys
+import trimesh
 
 import DatasetUtils as dt
 import DatasetViewerApp as dva
@@ -64,6 +66,11 @@ if __name__ == "__main__":
     for chair, value in sortedChairs:
         print(value)
         chairsToDisplay.append(chair)
+
+    # export the chairs as .objs
+    for i in range(len(chairsToDisplay)):
+        fileName = str(i) + '.obj'
+        mpv.exportModelAsObj(chairsToDisplay[i], fileName)
 
     # set models in a viewer
     mpv.setInputModels(chairsToDisplay)

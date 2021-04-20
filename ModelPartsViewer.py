@@ -8,8 +8,7 @@ import pyrender
 import random
 import sys
 from Scorer import Scorer
-
-
+import trimesh
 
 class Part:
     def __init__(self, mesh, label=None, side=None):
@@ -347,6 +346,26 @@ def takeNegativeScreenShot(viewer):
     generateChairViewer(viewer)
     pass
 
+def exportModelAsObj(model, filePath):
+    directory = os.path.dirname('export_objs/')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    path = os.path.join(directory, filePath)
+
+    resultCombinedMesh = trimesh.base.Trimesh()
+    for part in model.parts:
+        resultCombinedMesh = trimesh.util.concatenate([resultCombinedMesh, part.mesh])
+
+    obj = trimesh.exchange.obj.export_obj(resultCombinedMesh)
+    f = open(path, "w")
+    f.write(obj)
+    f.close()
+
+def exportCurrentChair(viewer):
+    currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
+    exportModelAsObj(currentModel, 'viewer_generated.obj')
+
 
 def start():
     modelPartsViewer.renderMode = 0
@@ -357,4 +376,4 @@ def start():
     setSceneMeshes(defaultScene, defaultModel.parts)
 
     pyrender.Viewer(defaultScene, registered_keys={
-                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChairViewer, 'x': takeScreenshot, 'y': takePositiveScreenShot, 'n': takeNegativeScreenShot, 'e': evalCurrentChair}, use_raymond_lighting=True)
+                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChairViewer, 'x': takeScreenshot, 'y': takePositiveScreenShot, 'n': takeNegativeScreenShot, 'e': evalCurrentChair, 'o': exportCurrentChair}, use_raymond_lighting=True)
