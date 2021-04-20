@@ -2,7 +2,13 @@ import random
 import sys
 
 import DatasetUtils as dt
+import numpy as np
+import pyrender
 import ModelPartsViewer as mpv
+from MLStatics import *
+from PIL import Image
+import ModelPartsScreenshot as mps
+
 
 
 def parseDatasetChairTuples(modelIndex, partsTuples):
@@ -49,11 +55,59 @@ if __name__ == "__main__":
         for i in range(randomAmount):
             randomIndex = int(random.randrange(1, 6201))
             datasetIndices.append(str(randomIndex))
+
+    elif sys.argv[1] == '-t':
+        print("Starting to load all models and then convert each to training data, if you dont want this exit now!")
+        # This can run out of memory (it did on my 64gb) so keep track of where it exits out and manually do it in parts
+        datasetIndices = range(0, 6201)
+
+        models = []
+        collections = {'back': [], 'seat': [], 'leg': [], 'arm rest': []}
+
+        outputDir = "dataset/imageData/chairs-data/positive/"
+
+        currentIndex = len(os.listdir(outputDir))
+        currentIndex += 1
+
+        # initialize perspectives
+        rotations = [
+            (0, 0, 0),  # front
+            (0, np.pi/2, 0),  # right
+            (np.pi/2, 0, 0),  # top
+        ]
+
+        for index in progressbar(datasetIndices):
+            partsTuples = dt.getDatasetObjParts(index)
+            modelParts = parseDatasetChairTuples(
+                index, partsTuples, collections)
+            currentModel = mpv.Model(modelParts)
+
+            # each screenshot will have w,h,3 shape in returned array in the same order as the given rotations
+            perspectives = mps.captureDepth(
+                currentModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
+
+            im = Image.fromarray(perspectives[0])
+            im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
+
+            currentIndex += 1
+
+            im = Image.fromarray(perspectives[1])
+            im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
+
+            currentIndex += 1
+
+            im = Image.fromarray(perspectives[2])
+            im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
+
+            currentIndex += 1
+
+        quit()
+        pass
     else:
         datasetIndices = sys.argv[1:]
 
     models = []
-    for index in datasetIndices:
+    for index in progressbar(datasetIndices, "Fetching Model Data"):
         partsTuples = dt.getDatasetObjParts(index)
         modelParts = parseDatasetChairTuples(index, partsTuples)
         model = mpv.Model(modelParts)

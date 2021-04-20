@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import ProjectUtils as pUtils
 import pyrender
+from pyrender.constants import *
 
 # Permanently changes the rotation
 
@@ -17,7 +18,7 @@ def rotateAllMeshesInScene(scene, rotationRad):
 
 def renderSceneWithRotation(offscreenRenderer, scene, rotationRad, depthBegin, depthEnd):
     rotateAllMeshesInScene(scene, rotationRad)
-
+    #flags = RenderFlags.DEPTH_ONLY
     pixels, depth = offscreenRenderer.render(scene)
 
     rows = depth.shape[0]
@@ -39,7 +40,8 @@ def renderSceneWithRotation(offscreenRenderer, scene, rotationRad, depthBegin, d
     depth = depth.astype(np.uint8)
 
     # turn it to w,h,3 shape
-    depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2RGB)
+    #depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2RGB)
+    #depth = cv2.cvtColor(depth, cv2.COLOR_RGB2GRAY)
 
     rotateAllMeshesInScene(scene, (0, 0, 0))
     return depth

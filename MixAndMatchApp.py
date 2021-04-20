@@ -7,7 +7,10 @@ import DatasetViewerApp as dva
 import ModelPartsScreenshot as mps
 import ModelPartsViewer as mpv
 import ProjectUtils as pUtils
-import Scorer as scorer
+from Scorer import Scorer
+
+from MLStatics import *
+
 
 
 def getRandomCollectionPart(partType, collections):
@@ -70,18 +73,18 @@ if __name__ == "__main__":
     # generate 10 new chairs
     generatedChairCount = 10
     newChairs = []
-    for i in range(generatedChairCount):
+    for i in progressbar(range(generatedChairCount), "Generating Chairs"):
         newChair = generateChair(models, collections)
         newChairs.append(newChair)
 
     # screenshot every new chair
     rotations = [
-        (0, 0, 0),  # front
-        (0, np.pi, 0),  # back
-        (0, -np.pi/2, 0),  # left
-        (0, np.pi/2, 0),  # right
         (np.pi/2, 0, 0),  # top
-        (-np.pi/2, 0, 0)  # bottom
+        (0, np.pi/2, 0),  # right
+        (0, 0, 0),  # front
+        # (0, np.pi, 0),  # back
+        # (0, -np.pi/2, 0),  # left
+        # (-np.pi/2, 0, 0)  # bottom
     ]
 
     depthScreenshots = []
@@ -90,10 +93,12 @@ if __name__ == "__main__":
             generatedChair, rotations, imageWidth=224, imageHeight=224)
         depthScreenshots.append((generatedChair, perspectives))
 
+    s = Scorer()
+
     # Assign a score
     scoredChairs = []
-    for generatedChair, perspectives in depthScreenshots:
-        score = scorer.score(perspectives)
+    for generatedChair, perspectives in progressbar(depthScreenshots, "Evaluating Chairs"):
+        score = s.score(perspectives)
         scoredChairs.append((generatedChair, score))
 
     # sort models depending on the score, from bigger to smaller
