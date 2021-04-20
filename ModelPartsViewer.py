@@ -102,9 +102,8 @@ def setRenderModeIndex(viewer, model, renderModeIndex):
         setViewerSceneMeshes(viewer, [model.parts[partToView]])
 
 
-def showNewModelFromParts(viewer, parts):
-    generatedChairModel = Model(parts)
-    modelPartsViewer.models.append(generatedChairModel)
+def showNewModel(viewer, model):
+    modelPartsViewer.models.append(model)
     setModelIndex(viewer, len(modelPartsViewer.models)-1)
 
 
@@ -138,8 +137,8 @@ def viewPrevPart(viewer):
     setRenderModeIndex(viewer, model, nextPartIndex)
 
 
-def getRandomCollectionPart(partType):
-    shuffledModels = modelPartsViewer.inputModels.copy()
+def getRandomCollectionPart(partType, inputModels):
+    shuffledModels = inputModels.copy()
     random.shuffle(shuffledModels)
     requiredPart = None
     for model in shuffledModels:
@@ -155,16 +154,16 @@ def getRandomCollectionPart(partType):
 # Takes random pieces from collection and puts them together in a mesh, replacing parts of a random chair
 
 
-def generateChair(viewer):
+def generateChair(inputModels):
     # use original model as a template, not the new generated one
-    originalModelCount = len(modelPartsViewer.inputModels)
+    originalModelCount = len(inputModels)
     randomModelIndex = int(random.randrange(0, originalModelCount))
-    randomModel = modelPartsViewer.inputModels[randomModelIndex]
+    randomModel = inputModels[randomModelIndex]
     chairParts = {
-        'seat': getRandomCollectionPart('seat'),
-        'back': getRandomCollectionPart('back'),
-        'leg': getRandomCollectionPart('leg'),
-        'arm rest': getRandomCollectionPart('arm rest')
+        'seat': getRandomCollectionPart('seat', inputModels),
+        'back': getRandomCollectionPart('back', inputModels),
+        'leg': getRandomCollectionPart('leg', inputModels),
+        'arm rest': getRandomCollectionPart('arm rest', inputModels)
     }
 
     resultParts = []
@@ -194,14 +193,18 @@ def generateChair(viewer):
 
             resultParts.append(Part(mesh=meshToAppend))
 
+    return Model(resultParts)
+    
+
+def generateChairViewer(viewer):
+    generatedChair = generateChair(modelPartsViewer.inputModels)
+
     # show the new model made out of all parts we need
     # it will appear on the screen and will be appended to the end of the viewable collection
-    showNewModelFromParts(viewer, resultParts)
+    showNewModel(viewer, generatedChair)
 
 # Takes a screenshot of the present chair model and saves it to the folder.
 # Demonstrates how to turn model into a set of pixels.
-
-
 def takeScreenshot(viewer):
     currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
 
@@ -305,7 +308,7 @@ def takePositiveScreenShot(viewer):
     im = Image.fromarray(perspectives[2])
     im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
     print("Saved as a Positive Chair")
-    generateChair(viewer)
+    generateChairViewer(viewer)
     pass
 
 
@@ -341,7 +344,7 @@ def takeNegativeScreenShot(viewer):
     im = Image.fromarray(perspectives[2])
     im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
     print("Saved as a Negative Chair")
-    generateChair(viewer)
+    generateChairViewer(viewer)
     pass
 
 
@@ -354,4 +357,4 @@ def start():
     setSceneMeshes(defaultScene, defaultModel.parts)
 
     pyrender.Viewer(defaultScene, registered_keys={
-                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 'x': takeScreenshot, 'y': takePositiveScreenShot, 'n': takeNegativeScreenShot, 'e': evalCurrentChair}, use_raymond_lighting=True)
+                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChairViewer, 'x': takeScreenshot, 'y': takePositiveScreenShot, 'n': takeNegativeScreenShot, 'e': evalCurrentChair}, use_raymond_lighting=True)
