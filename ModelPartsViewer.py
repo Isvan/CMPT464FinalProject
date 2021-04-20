@@ -10,49 +10,29 @@ import sys
 from Scorer import Scorer
 
 
+
 class Part:
-    def __init__(self, mesh, originalPart=None, side=None, label=None):
+    def __init__(self, mesh, label=None, side=None):
         self.mesh = copy.deepcopy(mesh)
-        if originalPart != None:
-            self.side = originalPart.side
-            self.label = originalPart.label
-        else:
-            assert side != None
-            assert label != None
-            self.side = side
+        if label != None:
             self.label = label
 
+        if side != None:
+            self.side = side
 
-class CollectionPart:
-    def __init__(self):
-        self.left = None
-        self.right = None
-        self.grouped = None
-        self.label = None
+        self.groupedParts = []
 
-    @property
-    def left(self):
-        return copy.deepcopy(self._left)
-
-    @left.setter
-    def left(self, value):
-        self._left = copy.deepcopy(value)
+    def getSide(self, side):
+        assert len(self.groupedParts) > 0
+        for part in self.groupedParts:
+            if part.side == side:
+                return copy.deepcopy(part)
+        return None
 
     @property
-    def right(self):
-        return copy.deepcopy(self._right)
+    def isGroupedOnly(self):
+        return len(self.groupedParts) <= 0
 
-    @right.setter
-    def right(self, value):
-        self._right = copy.deepcopy(value)
-
-    @property
-    def grouped(self):
-        return copy.deepcopy(self._grouped)
-
-    @grouped.setter
-    def grouped(self, value):
-        self._grouped = copy.deepcopy(value)
 
 
 class Model:
@@ -71,7 +51,7 @@ class Model:
 class ModelPartsViewer:
     def __init__(self):
         self.models = []
-        self.collections = {}
+        self.inputModels = []
         self.renderMode = 0
         self.viewerModelIndex = 0
         self.scorer = Scorer()
@@ -80,28 +60,28 @@ class ModelPartsViewer:
 modelPartsViewer = ModelPartsViewer()
 
 
-def setModels(models):
+def setInputModels(models):
+    modelPartsViewer.inputModels = copy.deepcopy(models)
     modelPartsViewer.models = copy.deepcopy(models)
 
 
-def setCollections(collections):
-    modelPartsViewer.collections = copy.deepcopy(collections)
-
-
-def setSceneMeshes(viewer, parts):
-    viewer.render_lock.acquire()
-
+def setSceneMeshes(scene, parts):
     # Remove all the current meshes
-    meshNodes = list(viewer.scene.mesh_nodes)
+    meshNodes = list(scene.mesh_nodes)
     for meshNode in meshNodes:
-        viewer.scene.remove_node(meshNode)
+        scene.remove_node(meshNode)
 
     # Add all the new meshes
     for part in parts:
         # we never manipulate meshes in the scene, only construct new ones
         # therefore, copying it is much safer because now we can access the "current mesh" parts
-        viewer.scene.add(copy.deepcopy(part.mesh))
+        partMesh = pyrender.Mesh.from_trimesh(part.mesh, smooth=False)
+        scene.add(partMesh)
 
+
+def setViewerSceneMeshes(viewer, parts):
+    viewer.render_lock.acquire()
+    setSceneMeshes(viewer.scene, parts)
     viewer.render_lock.release()
 
 
@@ -109,7 +89,7 @@ def setModelIndex(viewer, index):
     modelPartsViewer.viewerModelIndex = index
     modelPartsViewer.renderMode = 0
     allModelParts = modelPartsViewer.models[index].parts
-    setSceneMeshes(viewer, allModelParts)
+    setViewerSceneMeshes(viewer, allModelParts)
 
 
 def setRenderModeIndex(viewer, model, renderModeIndex):
@@ -117,14 +97,13 @@ def setRenderModeIndex(viewer, model, renderModeIndex):
 
     partToView = renderModeIndex - 1
     if partToView == -1:
-        setSceneMeshes(viewer, model.parts)
+        setViewerSceneMeshes(viewer, model.parts)
     else:
-        setSceneMeshes(viewer, [model.parts[partToView]])
+        setViewerSceneMeshes(viewer, [model.parts[partToView]])
 
 
-def showNewModelFromParts(viewer, parts):
-    generatedChairModel = Model(parts)
-    modelPartsViewer.models.append(generatedChairModel)
+def showNewModel(viewer, model):
+    modelPartsViewer.models.append(model)
     setModelIndex(viewer, len(modelPartsViewer.models)-1)
 
 
@@ -158,59 +137,74 @@ def viewPrevPart(viewer):
     setRenderModeIndex(viewer, model, nextPartIndex)
 
 
-def getRandomCollectionPart(partType):
-    collectionSize = len(modelPartsViewer.collections[partType])
-    if collectionSize == 0:
-        return None
+def getRandomCollectionPart(partType, inputModels):
+    shuffledModels = inputModels.copy()
+    random.shuffle(shuffledModels)
+    requiredPart = None
+    for model in shuffledModels:
+        requiredPart = model.getPartByLabel(partType)
+        if requiredPart != None:
+            break
 
-    randomIndex = int(random.randrange(0, collectionSize))
-    return modelPartsViewer.collections[partType][randomIndex]
+    return requiredPart
+
 
 # API END
 
 # Takes random pieces from collection and puts them together in a mesh, replacing parts of a random chair
 
 
-def generateChair(viewer):
-
-    # quick hack for getting the original number of models
+def generateChair(inputModels):
     # use original model as a template, not the new generated one
-    originalModelCount = len(sys.argv[1:])
+    originalModelCount = len(inputModels)
     randomModelIndex = int(random.randrange(0, originalModelCount))
-    randomModel = modelPartsViewer.models[randomModelIndex]
+    randomModel = inputModels[randomModelIndex]
     chairParts = {
-        'seat': getRandomCollectionPart('seat'),
-        'back': getRandomCollectionPart('back'),
-        'leg': getRandomCollectionPart('leg'),
-        'arm rest': getRandomCollectionPart('arm rest')
+        'seat': getRandomCollectionPart('seat', inputModels),
+        'back': getRandomCollectionPart('back', inputModels),
+        'leg': getRandomCollectionPart('leg', inputModels),
+        'arm rest': getRandomCollectionPart('arm rest', inputModels)
     }
 
     resultParts = []
     for part in randomModel.parts:
         newPart = chairParts[part.label]
 
-        # there are three total sided-ness: grouped, left and right
-        newPartMesh = None
-        if part.side == 'grouped':
-            newPartMesh = newPart.grouped
-        elif part.side == 'right':
-            newPartMesh = newPart.right
-        else:
-            newPartMesh = newPart.left
+        # if randomly picked mesh is a whole single mesh, then we should just place that mesh in stead of all non-combined present parts
+        # same goes if the picked part can be a whole mesh only
+        if newPart.isGroupedOnly or part.isGroupedOnly:
+            # the part.mesh is by default a combined mesh
+            meshToAppend = newPart.mesh
+            pUtils.scaleMeshAToB(meshToAppend, part.mesh)
+            pUtils.translateMeshAToB(meshToAppend, part.mesh)
+            resultParts.append(Part(mesh=meshToAppend))
+            continue
 
-        pUtils.scaleMeshAToB(newPartMesh, part.mesh)
-        pUtils.translateMeshAToB(newPartMesh, part.mesh)
+        # otherwise, collection part has left and right and given part has extra parts within
+        for groupedPart in part.groupedParts:
+            meshToAppend = None
+            if groupedPart.side == 'right':
+                meshToAppend = newPart.getSide('right').mesh
+            else:
+                meshToAppend = newPart.getSide('left').mesh
 
-        resultParts.append(Part(mesh=newPartMesh, originalPart=part))
+            pUtils.scaleMeshAToB(meshToAppend, groupedPart.mesh)
+            pUtils.translateMeshAToB(meshToAppend, groupedPart.mesh)
+
+            resultParts.append(Part(mesh=meshToAppend))
+
+    return Model(resultParts)
+    
+
+def generateChairViewer(viewer):
+    generatedChair = generateChair(modelPartsViewer.inputModels)
 
     # show the new model made out of all parts we need
     # it will appear on the screen and will be appended to the end of the viewable collection
-    showNewModelFromParts(viewer, resultParts)
+    showNewModel(viewer, generatedChair)
 
 # Takes a screenshot of the present chair model and saves it to the folder.
 # Demonstrates how to turn model into a set of pixels.
-
-
 def takeScreenshot(viewer):
     currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
 
@@ -314,7 +308,7 @@ def takePositiveScreenShot(viewer):
     im = Image.fromarray(perspectives[2])
     im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
     print("Saved as a Positive Chair")
-    generateChair(viewer)
+    generateChairViewer(viewer)
     pass
 
 
@@ -350,7 +344,7 @@ def takeNegativeScreenShot(viewer):
     im = Image.fromarray(perspectives[2])
     im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
     print("Saved as a Negative Chair")
-    generateChair(viewer)
+    generateChairViewer(viewer)
     pass
 
 
@@ -360,8 +354,7 @@ def start():
 
     defaultModel = modelPartsViewer.models[0]
     defaultScene = pyrender.Scene()
-    for part in defaultModel.parts:
-        defaultScene.add(copy.deepcopy(part.mesh))
+    setSceneMeshes(defaultScene, defaultModel.parts)
 
     pyrender.Viewer(defaultScene, registered_keys={
-                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChair, 'x': takeScreenshot, 'y': takePositiveScreenShot, 'n': takeNegativeScreenShot, 'e': evalCurrentChair}, use_raymond_lighting=True)
+                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChairViewer, 'x': takeScreenshot, 'y': takePositiveScreenShot, 'n': takeNegativeScreenShot, 'e': evalCurrentChair}, use_raymond_lighting=True)

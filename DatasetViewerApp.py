@@ -10,52 +10,31 @@ from PIL import Image
 import ModelPartsScreenshot as mps
 
 
-def parseDatasetChairTuples(modelIndex, partsTuples, collections):
+
+def parseDatasetChairTuples(modelIndex, partsTuples):
     modelParts = []
-    partsDictrionary = {}
+
+    # first make a pass on grouped
     for partMesh, partSide, partLabel in partsTuples:
-        part = mpv.Part(mesh=partMesh, side=partSide, label=partLabel)
+        if partSide != 'grouped':
+            continue
 
-        # first - construct the model to manipulate and display
-        # remove 'grouped' piece if just found 'left' or 'right'
-        for modelPart in modelParts:
-            if modelPart.label == partLabel and modelPart.side == 'grouped':
-                modelParts.remove(modelPart)
-                break
-
+        # Add model part
+        part = mpv.Part(mesh=partMesh, label=partLabel)
         modelParts.append(part)
 
-        # second - form the new collection
-        # would like to access collections['leg'][0] for example, which would have .left, .right, .grouped
-        partIdentifier = str(modelIndex)+'_'+partLabel
-        collectionPart = None
-        if partIdentifier in partsDictrionary:
-            collectionPart = partsDictrionary[partIdentifier]
-        else:
-            collectionPart = mpv.CollectionPart()
-            partsDictrionary[partIdentifier] = collectionPart
-
-        collectionPart.label = partLabel
+    # now make a pass on non grouped
+    for partMesh, partSide, partLabel in partsTuples:
         if partSide == 'grouped':
-            collectionPart.grouped = partMesh
-        if partSide == 'left':
-            collectionPart.left = partMesh
-        if partSide == 'right':
-            collectionPart.right = partMesh
+            continue
 
-    # Ensure the consistency of the parts collection
-    for partIdentifier, part in partsDictrionary.items():
-        # grouped must always be present
-        assert part.grouped != None
-
-        # if no left and right, then grouped becomes left and right
-        if part.left == None:
-            assert part.right == None
-            part.left = part.grouped
-            part.right = part.grouped
-
-        # store in appropriate collection
-        collections[part.label].append(part)
+        # Add model part
+        # Add it to .groupedParts array if the grouped version exists
+        for modelPart in modelParts:
+            if modelPart.label == partLabel:
+                sidePart = mpv.Part(mesh=partMesh, side=partSide)
+                modelPart.groupedParts.append(sidePart)
+                break
 
     # return model parts
     return modelParts
@@ -128,14 +107,12 @@ if __name__ == "__main__":
         datasetIndices = sys.argv[1:]
 
     models = []
-    collections = {'back': [], 'seat': [], 'leg': [], 'arm rest': []}
     for index in progressbar(datasetIndices, "Fetching Model Data"):
         partsTuples = dt.getDatasetObjParts(index)
-        modelParts = parseDatasetChairTuples(index, partsTuples, collections)
+        modelParts = parseDatasetChairTuples(index, partsTuples)
         model = mpv.Model(modelParts)
         model.name = str(index)  # for screenshotting convenience
         models.append(model)
 
-    mpv.setCollections(collections)
-    mpv.setModels(models)
+    mpv.setInputModels(models)
     mpv.start()

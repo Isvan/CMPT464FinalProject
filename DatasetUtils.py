@@ -208,8 +208,7 @@ def getDatasetObjParts(datasetIndex):
             for body, side in meshes:
                 body.visual.face_colors = np.full(
                     shape=[body.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors[part]))
-                partMesh = pyrender.Mesh.from_trimesh(body, smooth=False)
-                parts.append((partMesh, side, part))
+                parts.append((body, side, part))
 
     return parts
 
