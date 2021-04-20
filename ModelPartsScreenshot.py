@@ -5,12 +5,16 @@ import ProjectUtils as pUtils
 import pyrender
 
 # Permanently changes the rotation
+
+
 def rotateAllMeshesInScene(scene, rotationRad):
     for meshNode in scene.mesh_nodes:
-            quaternionRotation = pUtils.radEuler2Quat(rotationRad)
-            meshNode.rotation = quaternionRotation
+        quaternionRotation = pUtils.radEuler2Quat(rotationRad)
+        meshNode.rotation = quaternionRotation
 
 # Rotates meshes, takes picture and resets the rotation back
+
+
 def renderSceneWithRotation(offscreenRenderer, scene, rotationRad, depthBegin, depthEnd):
     rotateAllMeshesInScene(scene, rotationRad)
 
@@ -41,7 +45,7 @@ def renderSceneWithRotation(offscreenRenderer, scene, rotationRad, depthBegin, d
     return depth
 
 
-def captureDepth(model, rotations, imageWidth = 224, imageHeight = 224, cameraZTranslation = 2.5, lightIntensity = 2.0, depthBegin = 1, depthEnd = 5):
+def captureDepth(model, rotations, imageWidth=224, imageHeight=224, cameraZTranslation=2.5, lightIntensity=2.0, depthBegin=1, depthEnd=5):
     # Construct an offline scene
     scene = pyrender.Scene()
 
@@ -51,22 +55,26 @@ def captureDepth(model, rotations, imageWidth = 224, imageHeight = 224, cameraZT
         scene.add(partMesh)
 
     # add camera
-    renderCamera = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=imageWidth/imageHeight)
+    renderCamera = pyrender.PerspectiveCamera(
+        yfov=np.pi / 3.0, aspectRatio=imageWidth/imageHeight)
     cameraNode = pyrender.Node(camera=renderCamera, matrix=np.eye(4))
     cameraNode.translation[2] = cameraZTranslation
     scene.add_node(cameraNode)
 
     # add light
-    light = pyrender.DirectionalLight(color=[1.0, 1.0, 1.0], intensity=lightIntensity)
+    light = pyrender.DirectionalLight(
+        color=[1.0, 1.0, 1.0], intensity=lightIntensity)
     lightNode = pyrender.Node(light=light, matrix=np.eye(4))
     scene.add_node(lightNode)
 
     # initialize offscreen renderer
-    offscreenRenderer = pyrender.OffscreenRenderer(viewport_width = imageWidth, viewport_height = imageHeight, point_size = 1.0)
+    offscreenRenderer = pyrender.OffscreenRenderer(
+        viewport_width=imageWidth, viewport_height=imageHeight, point_size=1.0)
 
     # render
     result = []
     for rotation in rotations:
-        result.append(renderSceneWithRotation(offscreenRenderer, scene, rotation, depthBegin, depthEnd))
+        result.append(renderSceneWithRotation(offscreenRenderer,
+                      scene, rotation, depthBegin, depthEnd))
 
     return result

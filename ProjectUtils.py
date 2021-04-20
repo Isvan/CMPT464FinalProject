@@ -29,7 +29,7 @@ def scaleMeshAToB(meshA, meshB):
         pos[0] *= scale[0]
         pos[1] *= scale[1]
         pos[2] *= scale[2]
-        pos += centera            
+        pos += centera
 
 
 def translateMeshAToB(meshA, meshB):
@@ -38,7 +38,7 @@ def translateMeshAToB(meshA, meshB):
 
     translationVector = centroidB - centroidA
     for pos in meshA.vertices:
-        pos += translationVector            
+        pos += translationVector
 
 # https://computergraphics.stackexchange.com/questions/8195/how-to-convert-euler-angles-to-quaternions-and-get-the-same-euler-angles-back-fr
 
