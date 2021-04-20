@@ -156,12 +156,10 @@ def getRandomCollectionPart(partType):
 
 
 def generateChair(viewer):
-
-    # quick hack for getting the original number of models
     # use original model as a template, not the new generated one
-    originalModelCount = len(sys.argv[1:])
+    originalModelCount = len(modelPartsViewer.inputModels)
     randomModelIndex = int(random.randrange(0, originalModelCount))
-    randomModel = modelPartsViewer.models[randomModelIndex]
+    randomModel = modelPartsViewer.inputModels[randomModelIndex]
     chairParts = {
         'seat': getRandomCollectionPart('seat'),
         'back': getRandomCollectionPart('back'),
