@@ -68,6 +68,13 @@ def natural_keys(text):
 # output has an array of pyrender.Mesh objects (parts)
 
 
+def vdistancesq(a, b):
+    dsum = 0
+    for i in range(3):
+        dsum = dsum+(a[i]-b[i])*(a[i]-b[i])
+    return dsum
+
+
 def getDatasetObjParts(datasetIndex):
     json_data_path = 'dataset/compiled/'
     dataset_path = 'dataset/Chair/'
@@ -87,14 +94,14 @@ def getDatasetObjParts(datasetIndex):
         mkdir(partPath)
         print("created directory for all parts")
     except:
-        #print("parts directory exists")
+        # print("parts directory exists")
         i = 0
 
     try:
         mkdir(partPath+modelNum)
         print("created directory for parts of chair"+modelNum)
     except:
-        #print("directory for "+modelNum+" exists")
+        # print("directory for "+modelNum+" exists")
         i = 0
 
     part_colors = {
@@ -197,18 +204,62 @@ def getDatasetObjParts(datasetIndex):
             chairParts[partLabel]['vcount'] = chairParts[partLabel]['text'].count(
                 'v')
             pfile.close()
+    indivParts = []
+    for iter, filename in enumerate(sorted_names):
+        if filename.endswith(".obj"):
+            partLabel = part_labels.get(plabels[iter])
+            # pfile = open(partPath+modelNum+'/'+filename)
+            partTri = trimesh.load(partPath+modelNum+'/'+filename)
+            partTri = trimesh.convex.convex_hull(
+                partTri, qhull_options='QbB Pp Qt')
+            indivParts.append((partLabel, partTri))
+    psums = {'back': 0, 'seat': 0, 'leg': 0, 'arm rest': 0}
+    chairJoints = {'back': [], 'seat': [], 'leg': [], 'arm rest': []}
+    for label, part in indivParts:
+        partJoints = []
+        for olabel, opart in indivParts:
+            curJoint = []
+            if(olabel != label):
+
+                # This needs to be multithreaded
+                # for iter, vertex in enumerate(part.vertices):
+                #     dist = trimesh.proximity.closest_point(
+                #         opart, part.vertices)[1]
+                #     if(dist < threshold):
+                #         iter+psums[label]
+                #end of multithreading
+
+                curJoint = trimesh.proximity.closest_point(
+                    opart, part.vertices)[1]
+                curJoint = np.where(curJoint < .005)[0]
+                location = [0, 0, 0]
+                for j in curJoint:
+                    location = location+part.vertices[j]
+
+                if(len(curJoint) > 0):
+                    location = location/len(curJoint)
+                    partJoints.append((olabel, location))
+        psums[label] += len(part.vertices)
+        if(len(partJoints) > 0):
+            chairJoints[label].append(partJoints)
+    # print(chairJoints)
+
     for part in chairParts:
         if(len(chairParts[part]['text']) > 0):
             partTri = trimesh.load(
                 StringIO(chairParts[part]['text']), file_type='obj')
-            if(part == 'leg' or part == 'arm rest'):
+            if(part != 'seat'):  # (part == 'leg' or part == 'arm rest'):
                 trimesh.repair.fix_normals(partTri)
 
             meshes = splitPartMesh(partTri, part)  # part is label
             for body, side in meshes:
                 body.visual.face_colors = np.full(
                     shape=[body.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors[part]))
-                parts.append((body, side, part))
+                # trimesh.repair.broken_faces(
+                #     body, color=trimesh.visual.color.hex_to_rgba("fd00f9"))
+                # body = trimesh.convex.convex_hull(
+                #     body, qhull_options='QbB Pp Qt')
+                parts.append((body, side, part, chairJoints[part]))
 
     return parts
 

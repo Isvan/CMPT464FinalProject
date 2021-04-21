@@ -1,6 +1,8 @@
 import numpy as np
 import pyrender
 import random
+import trimesh
+import math
 
 
 def normalizeVector(vector):
@@ -30,6 +32,7 @@ def scaleMeshAToB(meshA, meshB):
         pos[1] *= scale[1]
         pos[2] *= scale[2]
         pos += centera
+    return scale
 
 
 def translateMeshAToB(meshA, meshB):
@@ -39,8 +42,65 @@ def translateMeshAToB(meshA, meshB):
     translationVector = centroidB - centroidA
     for pos in meshA.vertices:
         pos += translationVector
+    return translationVector
 
-# https://computergraphics.stackexchange.com/questions/8195/how-to-convert-euler-angles-to-quaternions-and-get-the-same-euler-angles-back-fr
+
+def vdistancesq(a, b):
+    dsum = 0
+    for i in range(3):
+        dsum = dsum+(a[i]-b[i])*(a[i]-b[i])
+    return dsum
+
+
+def connectJoints(parts):
+    # parts = array of parts
+    # for each joint from each part, move vertices near joint to point on surface of matching part
+    indices = {'back': -1, 'seat': -1, 'leg': -1, 'arm rest': -1}
+    for iter, part in enumerate(parts):
+        indices[part.label] = iter
+
+    for part in parts:
+        if(part.label != 'seat'):
+            for joint in part.joints:
+               # print("joint is: ", joint)
+                label = joint[0][0]
+                location = [joint[0][1]]
+                #print("location is:", location, np.shape(location))
+                # location.reshape((3, 1))
+                # print("location is:", location, np.shape(location))
+
+                if(indices[label] > -1):
+                    pos = trimesh.proximity.closest_point(
+                        parts[indices[label]].mesh, location)[0]
+                    translation = pos[0]-location[0]
+                    for vertex in part.mesh.vertices:
+                        # if(vdistancesq(vertex, location[0]) < .05):
+                        thisT = translation / \
+                            max(1.0,
+                                (vdistancesq(vertex, location[0])/.05))
+                        vertex += thisT
+                        if(vdistancesq(vertex, pos[0]) < .005):
+                            vertex = trimesh.proximity.closest_point(
+                                parts[indices[label]].mesh, [vertex])[0][0]
+
+    #part[0].mesh.vertices += (pos-part[0].mesh.vertices)*distance_from_location
+    # https://computergraphics.stackexchange.com/questions/8195/how-to-convert-euler-angles-to-quaternions-and-get-the-same-euler-angles-back-fr
+
+
+def transformJoints(scale, translation, part):
+    for joint in part.joints:
+        joint[0][1][0] = joint[0][1][0]-part.mesh.centroid[0]
+        joint[0][1][1] = joint[0][1][1]-part.mesh.centroid[1]
+        joint[0][1][2] = joint[0][1][2]-part.mesh.centroid[2]
+        joint[0][1][0] = joint[0][1][0]*scale[0]
+        joint[0][1][1] = joint[0][1][1]*scale[1]
+        joint[0][1][2] = joint[0][1][2]*scale[2]
+        joint[0][1][0] = joint[0][1][0]+part.mesh.centroid[0]
+        joint[0][1][1] = joint[0][1][1]+part.mesh.centroid[1]
+        joint[0][1][2] = joint[0][1][2]+part.mesh.centroid[2]
+        joint[0][1][0] = joint[0][1][0]+translation[0]
+        joint[0][1][1] = joint[0][1][1]+translation[1]
+        joint[0][1][2] = joint[0][1][2]+translation[2]
 
 
 def radEuler2Quat(vec3):
