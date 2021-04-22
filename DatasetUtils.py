@@ -226,23 +226,20 @@ def getDatasetObjParts(datasetIndex):
                 #     dist = trimesh.proximity.closest_point(
                 #         opart, part.vertices)[1]
                 #     if(dist < threshold):
-                #         iter+psums[label]
-                #end of multithreading
-
+                #        curJoint.append(iter+psums[label])
+                # end of multithreading
+                # curJoint = [index0,index1........]
                 curJoint = trimesh.proximity.closest_point(
                     opart, part.vertices)[1]
                 curJoint = np.where(curJoint < .005)[0]
-                location = [0, 0, 0]
-                for j in curJoint:
-                    location = location+part.vertices[j]
 
                 if(len(curJoint) > 0):
-                    location = location/len(curJoint)
-                    partJoints.append((olabel, location))
+                    partJoints.append((olabel, curJoint))
+                    # print(partJoints)
         psums[label] += len(part.vertices)
         if(len(partJoints) > 0):
             chairJoints[label].append(partJoints)
-    # print(chairJoints)
+    print(chairJoints)
 
     for part in chairParts:
         if(len(chairParts[part]['text']) > 0):

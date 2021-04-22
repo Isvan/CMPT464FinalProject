@@ -58,30 +58,51 @@ def connectJoints(parts):
     indices = {'back': -1, 'seat': -1, 'leg': -1, 'arm rest': -1}
     for iter, part in enumerate(parts):
         indices[part.label] = iter
+    '''
+    #match joints in part with joints from other part
+    # ie 4 leg joints go to 4 closest seat joints if too far don't move
+
+    #if no matching joints then move to surface
+
+    # moving
+    #       first translate the whole model to make the joint closer
+    #                           based on joint centroid
+    #       move vertices in the joint to the surface
+
+
+    joint[0] = label
+    joint[1] = array of vertex indices
+
+    seat: leg: [[]]
+    '''
 
     for part in parts:
-        if(part.label != 'seat'):
-            for joint in part.joints:
-               # print("joint is: ", joint)
-                label = joint[0][0]
-                location = [joint[0][1]]
-                #print("location is:", location, np.shape(location))
-                # location.reshape((3, 1))
-                # print("location is:", location, np.shape(location))
+        if(part.label == 'seat'):
+            continue
+        for joint in part.joints:
+            print("joint is: ", joint)
+            #get all joints from joint label matching part.label
 
-                if(indices[label] > -1):
-                    pos = trimesh.proximity.closest_point(
-                        parts[indices[label]].mesh, location)[0]
-                    translation = pos[0]-location[0]
-                    for vertex in part.mesh.vertices:
-                        # if(vdistancesq(vertex, location[0]) < .05):
-                        thisT = translation / \
-                            max(1.0,
-                                (vdistancesq(vertex, location[0])/.05))
-                        vertex += thisT
-                        if(vdistancesq(vertex, pos[0]) < .005):
-                            vertex = trimesh.proximity.closest_point(
-                                parts[indices[label]].mesh, [vertex])[0][0]
+
+            # label = joint[0][0]
+            # location = [joint[0][1]]
+            # #print("location is:", location, np.shape(location))
+            # # location.reshape((3, 1))
+            # # print("location is:", location, np.shape(location))
+
+            # if(indices[label] > -1):
+            #     pos = trimesh.proximity.closest_point(
+            #         parts[indices[label]].mesh, location)[0]
+            #     translation = pos[0]-location[0]
+            #     for vertex in part.mesh.vertices:
+            #         # if(vdistancesq(vertex, location[0]) < .05):
+            #         thisT = translation / \
+            #             max(1.0,
+            #                 (vdistancesq(vertex, location[0])/.05))
+            #         vertex += thisT
+            #         if(vdistancesq(vertex, pos[0]) < .005):
+            #             vertex = trimesh.proximity.closest_point(
+            #                 parts[indices[label]].mesh, [vertex])[0][0]
 
     #part[0].mesh.vertices += (pos-part[0].mesh.vertices)*distance_from_location
     # https://computergraphics.stackexchange.com/questions/8195/how-to-convert-euler-angles-to-quaternions-and-get-the-same-euler-angles-back-fr
