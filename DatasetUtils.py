@@ -211,19 +211,21 @@ def getDatasetObjParts(datasetIndex):
     except:
 
         indivParts = []
+        indivhulls = []
         for iter, filename in enumerate(sorted_names):
             if filename.endswith(".obj"):
                 partLabel = part_labels.get(plabels[iter])
                 # pfile = open(partPath+modelNum+'/'+filename)
                 partTri = trimesh.load(partPath+modelNum+'/'+filename)
-                partTri = trimesh.convex.convex_hull(
+                partTrihull = trimesh.convex.convex_hull(
                     partTri, qhull_options='QbB Pp Qt')
                 indivParts.append((partLabel, partTri))
+                indivhulls.append((partLabel, partTrihull))
         psums = {'back': 0, 'seat': 0, 'leg': 0, 'arm rest': 0}
         chairJoints = {'back': [], 'seat': [], 'leg': [], 'arm rest': []}
         for label, part in indivParts:
             partJoints = []
-            for olabel, opart in indivParts:
+            for olabel, opart in indivhulls:
                 curJoint = []
                 if(olabel != label):
 
@@ -237,9 +239,11 @@ def getDatasetObjParts(datasetIndex):
                     # curJoint = [index0,index1........]
                     curJoint = trimesh.proximity.closest_point(
                         opart, part.vertices)[1]
-                    curJoint = np.where(curJoint < .0045)[0]
-                    curJoint = curJoint+psums[label]
+                    curJoint = np.where(curJoint < .005)[0]
+                    # consider iterating through vertices in part to get the indices properly ie if if v==curjoint then append that index to joint....
+                    print(part.vertices[curJoint])
                     if(len(curJoint) > 0):
+                        curJoint = curJoint+psums[label]
                         partJoints.append((olabel, curJoint))
                         # print(partJoints)
             psums[label] += len(part.vertices)

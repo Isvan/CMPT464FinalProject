@@ -206,8 +206,8 @@ def generateChair(inputModels):
         # if newPart.isGroupedOnly or part.isGroupedOnly:
         # the part.mesh is by default a combined mesh
         meshToAppend = newPart
-        scale = pUtils.scaleMeshAToB(meshToAppend.mesh, part.mesh)
-        translation = pUtils.translateMeshAToB(meshToAppend.mesh, part.mesh)
+        #scale = pUtils.scaleMeshAToB(meshToAppend.mesh, part.mesh)
+        #translation = pUtils.translateMeshAToB(meshToAppend.mesh, part.mesh)
         # print(meshToAppend.joints[0])
         #pUtils.transformJoints(scale, translation, meshToAppend)
         # print(meshToAppend.joints[0])
@@ -226,7 +226,7 @@ def generateChair(inputModels):
         #     pUtils.translateMeshAToB(meshToAppend, groupedPart.mesh)
 
         #     resultParts.append(Part(mesh=meshToAppend))
-    # pUtils.connectJoints(resultParts)
+    pUtils.connectJoints(resultParts)
     return Model(resultParts)
 
 

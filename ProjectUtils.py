@@ -90,7 +90,7 @@ def connectJoints(parts):
     '''
 
     for part in parts:
-        if(part.label != 'seat'):
+        if(part.label == 'leg'):
             for joint in part.joints:
                 print("joint is: ", joint)
                 label = joint[0][0]
@@ -121,9 +121,14 @@ def connectJoints(parts):
 
                 closest_point = trimesh.proximity.closest_point(
                     parts[partIndices[label]].mesh, [centroid])[0]
-                trans_distance = (closest_point[0]-centroid)
-                print("translation vector: ", trans_distance)
-                translateMeshVec(part.mesh, trans_distance)
+                translation = [1, 0, 0]  # (closest_point[0]-centroid)
+                print("translation vector: ", translation)
+                for ind in indices:
+                    # thisT = translation / \
+                    #     max(1.0,
+                    #         (vdistancesq(vertex[ind], location[0])/.05))
+                    part.mesh.vertices[ind] += translation
+                #translateMeshVec(part.mesh, trans_distance)
             # label = joint[0][0]
             # location = [joint[0][1]]
             # #print("location is:", location, np.shape(location))
