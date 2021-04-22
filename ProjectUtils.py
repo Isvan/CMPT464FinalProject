@@ -52,12 +52,25 @@ def vdistancesq(a, b):
     return dsum
 
 
+def jointCentroid(vertices, indices):
+    centroid = [0, 0, 0]
+    for index in indices:
+        centroid = centroid+vertices[index]
+    centroid = centroid/len(indices)
+    return centroid
+
+
+def translateMeshVec(meshA, vector: list):
+    for pos in meshA.vertices:
+        pos += vector
+
+
 def connectJoints(parts):
     # parts = array of parts
     # for each joint from each part, move vertices near joint to point on surface of matching part
-    indices = {'back': -1, 'seat': -1, 'leg': -1, 'arm rest': -1}
+    partIndices = {'back': -1, 'seat': -1, 'leg': -1, 'arm rest': -1}
     for iter, part in enumerate(parts):
-        indices[part.label] = iter
+        partIndices[part.label] = iter
     '''
     #match joints in part with joints from other part
     # ie 4 leg joints go to 4 closest seat joints if too far don't move
@@ -81,8 +94,37 @@ def connectJoints(parts):
             continue
         for joint in part.joints:
             print("joint is: ", joint)
-            #get all joints from joint label matching part.label
+            label = joint[0][0]
+            print("label: ", label)
+            indices = joint[0][1]
+            centroid = jointCentroid(part.mesh.vertices, indices)
+            # get all joints from joint label matching part.label
+            matchingJoints = []
+            centroids = []
+            try:
+                for mjoint in parts[partIndices[label]].joints:
+                    if mjoint[0][0] == part.label:
+                        matchingJoints.append(mjoint)
+                        centroids.append(
+                            jointCentroid(parts[partIndices[label]].mesh.vertices, mjoint[0][1]))
+            except IndexError:
+                print("label is: ", label, "\nindices is: ", partIndices)
+            closest = -1
+            min_d = 10
+            for iter, c in enumerate(centroids):
+                cdist = vdistancesq(centroid, c)
+                if(cdist < min_d and cdist < .002):
+                    closest = iter
+                    min_d = cdist
+            # if(closest > -1):
+            #     translateMeshVec(part.mesh, (centroids[closest]-centroid))
+            # else:
 
+            closest_point = trimesh.proximity.closest_point(
+                parts[partIndices[label]].mesh, [centroid])[0]
+            trans_distance = (closest_point[0]-centroid)
+            print("translation vector: ", trans_distance)
+            translateMeshVec(part.mesh, trans_distance)
 
             # label = joint[0][0]
             # location = [joint[0][1]]

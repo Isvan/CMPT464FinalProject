@@ -5,6 +5,7 @@ import pyrender
 import re
 import trimesh
 from io import StringIO
+import pickle
 
 # Splits the legs or arm rests by overlaying a "cross" at the centroid
 # Produces the meaningful parts (whole leg, whole armrest, etc.) whenever possible
@@ -204,42 +205,49 @@ def getDatasetObjParts(datasetIndex):
             chairParts[partLabel]['vcount'] = chairParts[partLabel]['text'].count(
                 'v')
             pfile.close()
-    indivParts = []
-    for iter, filename in enumerate(sorted_names):
-        if filename.endswith(".obj"):
-            partLabel = part_labels.get(plabels[iter])
-            # pfile = open(partPath+modelNum+'/'+filename)
-            partTri = trimesh.load(partPath+modelNum+'/'+filename)
-            partTri = trimesh.convex.convex_hull(
-                partTri, qhull_options='QbB Pp Qt')
-            indivParts.append((partLabel, partTri))
-    psums = {'back': 0, 'seat': 0, 'leg': 0, 'arm rest': 0}
-    chairJoints = {'back': [], 'seat': [], 'leg': [], 'arm rest': []}
-    for label, part in indivParts:
-        partJoints = []
-        for olabel, opart in indivParts:
-            curJoint = []
-            if(olabel != label):
+    try:
+        with open(dataset_path + "models/joints/"+modelNum,  "rb") as Joint:
+            chairJoints = pickle.load(Joint)
+    except:
 
-                # This needs to be multithreaded
-                # for iter, vertex in enumerate(part.vertices):
-                #     dist = trimesh.proximity.closest_point(
-                #         opart, part.vertices)[1]
-                #     if(dist < threshold):
-                #        curJoint.append(iter+psums[label])
-                # end of multithreading
-                # curJoint = [index0,index1........]
-                curJoint = trimesh.proximity.closest_point(
-                    opart, part.vertices)[1]
-                curJoint = np.where(curJoint < .005)[0]
+        indivParts = []
+        for iter, filename in enumerate(sorted_names):
+            if filename.endswith(".obj"):
+                partLabel = part_labels.get(plabels[iter])
+                # pfile = open(partPath+modelNum+'/'+filename)
+                partTri = trimesh.load(partPath+modelNum+'/'+filename)
+                partTri = trimesh.convex.convex_hull(
+                    partTri, qhull_options='QbB Pp Qt')
+                indivParts.append((partLabel, partTri))
+        psums = {'back': 0, 'seat': 0, 'leg': 0, 'arm rest': 0}
+        chairJoints = {'back': [], 'seat': [], 'leg': [], 'arm rest': []}
+        for label, part in indivParts:
+            partJoints = []
+            for olabel, opart in indivParts:
+                curJoint = []
+                if(olabel != label):
 
-                if(len(curJoint) > 0):
-                    partJoints.append((olabel, curJoint))
-                    # print(partJoints)
-        psums[label] += len(part.vertices)
-        if(len(partJoints) > 0):
-            chairJoints[label].append(partJoints)
-    print(chairJoints)
+                    # This needs to be multithreaded
+                    # for iter, vertex in enumerate(part.vertices):
+                    #     dist = trimesh.proximity.closest_point(
+                    #         opart, part.vertices)[1]
+                    #     if(dist < threshold):
+                    #        curJoint.append(iter+psums[label])
+                    # end of multithreading
+                    # curJoint = [index0,index1........]
+                    curJoint = trimesh.proximity.closest_point(
+                        opart, part.vertices)[1]
+                    curJoint = np.where(curJoint < .0045)[0]
+
+                    if(len(curJoint) > 0):
+                        partJoints.append((olabel, curJoint))
+                        # print(partJoints)
+            psums[label] += len(part.vertices)
+            if(len(partJoints) > 0):
+                chairJoints[label].append(partJoints)
+        with open(dataset_path + "models/joints/"+modelNum, 'wb') as output:
+            pickle.dump(chairJoints, output, pickle.HIGHEST_PROTOCOL)
+        # print(chairJoints)
 
     for part in chairParts:
         if(len(chairParts[part]['text']) > 0):

@@ -5,6 +5,8 @@ dataset/__pycache__
 dataset/Chair
 screenshots
 export_objs
+grass_dataset_viewer/Chair
+grass-master/Chair
 .input_history
 
 #ML Stuff
