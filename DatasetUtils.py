@@ -170,8 +170,8 @@ def getDatasetObjParts(datasetIndex):
 
     sorted_names = listdir(partPath+modelNum+'/')
     sorted_names.sort(key=natural_keys)
-    chairParts = {'back': {'text': "", 'vcount': 0}, 'seat': {'text': "", 'vcount': 0}, 'leg': {
-        'text': "", 'vcount': 0}, 'arm rest': {'text': "", 'vcount': 0}}
+    # chairParts = {'back': {'text': "", 'vcount': 0}, 'seat': {'text': "", 'vcount': 0}, 'leg': {
+    #     'text': "", 'vcount': 0}, 'arm rest': {'text': "", 'vcount': 0}}
     # for iter, filename in enumerate(sorted_names):
     #     if filename.endswith(".obj"):
     #         partTri = trimesh.load(partPath+modelNum+'/'+filename)
@@ -184,27 +184,7 @@ def getDatasetObjParts(datasetIndex):
     #         partMesh = pyrender.Mesh.from_trimesh(partTri, smooth=False)
 
     #         parts.append((partMesh, partLabel))
-    for iter, filename in enumerate(sorted_names):
-        if filename.endswith(".obj"):
-            pfile = open(partPath+modelNum+'/'+filename)
-            partLabel = part_labels.get(plabels[iter])
-            lines = pfile.read().split('\n')
-            for lineind, line in enumerate(lines):
-                if(len(line) > 0):
-                    if(line.count('f') > 0):
-                        subline = line.split(' ')
-                        for index, part in enumerate(subline):
-                            if part.isnumeric():
-                                newindex = int(
-                                    part)+int(chairParts[partLabel]['vcount'])
-                                subline[index] = str(newindex)
-                        lines[lineind] = ' '.join(subline)
 
-            joinedlines = '\n'.join(lines)
-            chairParts[partLabel]['text'] = chairParts[partLabel]['text']+joinedlines
-            chairParts[partLabel]['vcount'] = chairParts[partLabel]['text'].count(
-                'v')
-            pfile.close()
     try:
         with open(dataset_path + "models/joints/"+modelNum,  "rb") as Joint:
             chairJoints = pickle.load(Joint)
@@ -241,34 +221,73 @@ def getDatasetObjParts(datasetIndex):
                         opart, part.vertices)[1]
                     curJoint = np.where(curJoint < .005)[0]
                     # consider iterating through vertices in part to get the indices properly ie if if v==curjoint then append that index to joint....
-                    print(part.vertices[curJoint])
+                    # print(part.vertices[curJoint])
                     if(len(curJoint) > 0):
                         curJoint = curJoint+psums[label]
                         partJoints.append((olabel, curJoint))
                         # print(partJoints)
             psums[label] += len(part.vertices)
+            # print(psums)
             if(len(partJoints) > 0):
                 chairJoints[label].append(partJoints)
         with open(dataset_path + "models/joints/"+modelNum, 'wb') as output:
             pickle.dump(chairJoints, output, pickle.HIGHEST_PROTOCOL)
-        print(chairJoints)
+        # print(chairJoints)
+# for iter, filename in enumerate(sorted_names):
+    #     if filename.endswith(".obj"):
+    #         pfile = open(partPath+modelNum+'/'+filename)
+    #         partLabel = part_labels.get(plabels[iter])
+    #         lines = pfile.read().split('\n')
+    #         for lineind, line in enumerate(lines):
+    #             if(len(line) > 0):
+    #                 if(line.count('f') > 0):
+    #                     subline = line.split(' ')
+    #                     for index, part in enumerate(subline):
+    #                         if part.isnumeric():
+    #                             newindex = int(
+    #                                 part)+int(chairParts[partLabel]['vcount'])
+    #                             subline[index] = str(newindex)
+    #                     lines[lineind] = ' '.join(subline)
 
-    for part in chairParts:
-        if(len(chairParts[part]['text']) > 0):
-            partTri = trimesh.load(
-                StringIO(chairParts[part]['text']), file_type='obj')
-            if(part != 'seat'):  # (part == 'leg' or part == 'arm rest'):
+    #         joinedlines = '\n'.join(lines)
+    #         chairParts[partLabel]['text'] = chairParts[partLabel]['text']+joinedlines
+    #         chairParts[partLabel]['vcount'] = chairParts[partLabel]['text'].count(
+    #             'v')
+    #         pfile.close()
+    # for part in chairParts:
+    #     if(len(chairParts[part]['text']) > 0):
+    #         partTri = trimesh.load(
+    #             StringIO(chairParts[part]['text']), file_type='obj')
+    #         if(part != 'seat'):  # (part == 'leg' or part == 'arm rest'):
+    #             trimesh.repair.fix_normals(partTri)
+
+    #         meshes = splitPartMesh(partTri, part)  # part is label
+    #         for body, side in meshes:
+    #             body.visual.face_colors = np.full(
+    #                 shape=[body.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors[part]))
+    #             # trimesh.repair.broken_faces(
+    #             #     body, color=trimesh.visual.color.hex_to_rgba("fd00f9"))
+    #             # body = trimesh.convex.convex_hull(
+    #             #     body, qhull_options='QbB Pp Qt')
+    #             parts.append((body, side, part, chairJoints[part]))
+    part_arrays = {'back': [], 'seat': [], 'arm rest': [], 'leg': []}
+    for iter, filename in enumerate(sorted_names):
+        if filename.endswith(".obj"):
+            partLabel = part_labels.get(plabels[iter])
+            # pfile = open(partPath+modelNum+'/'+filename)
+            partTri = trimesh.load(partPath+modelNum+'/'+filename)
+            if(partLabel != 'seat'):  # (part == 'leg' or part == 'arm rest'):
                 trimesh.repair.fix_normals(partTri)
+            part_arrays[partLabel].append(partTri)
 
-            meshes = splitPartMesh(partTri, part)  # part is label
-            for body, side in meshes:
-                body.visual.face_colors = np.full(
-                    shape=[body.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors[part]))
-                # trimesh.repair.broken_faces(
-                #     body, color=trimesh.visual.color.hex_to_rgba("fd00f9"))
-                # body = trimesh.convex.convex_hull(
-                #     body, qhull_options='QbB Pp Qt')
-                parts.append((body, side, part, chairJoints[part]))
+    for key in part_arrays.keys():
+        if len(part_arrays[key]) > 0:
+            thismesh = trimesh.util.concatenate(
+                trimesh.base.Trimesh(), part_arrays[key])
+            thismesh.visual.face_colors = np.full(
+                shape=[thismesh.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors[key]))
+
+            parts.append((thismesh, 'grouped', key, chairJoints[key]))
 
     return parts
 
