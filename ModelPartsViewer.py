@@ -214,8 +214,6 @@ def generateChair(inputModels):
         resultParts.append(meshToAppend)
         # for joint in meshToAppend.joints:
 
-        continue
-
         # otherwise, collection part has left and right and given part has extra parts within
         # for groupedPart in part.groupedParts:
         #     meshToAppend = None
@@ -228,7 +226,7 @@ def generateChair(inputModels):
         #     pUtils.translateMeshAToB(meshToAppend, groupedPart.mesh)
 
         #     resultParts.append(Part(mesh=meshToAppend))
-    pUtils.connectJoints(resultParts)
+    # pUtils.connectJoints(resultParts)
     return Model(resultParts)
 
 

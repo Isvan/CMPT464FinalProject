@@ -238,7 +238,7 @@ def getDatasetObjParts(datasetIndex):
                     curJoint = trimesh.proximity.closest_point(
                         opart, part.vertices)[1]
                     curJoint = np.where(curJoint < .0045)[0]
-
+                    curJoint = curJoint+psums[label]
                     if(len(curJoint) > 0):
                         partJoints.append((olabel, curJoint))
                         # print(partJoints)
@@ -247,7 +247,7 @@ def getDatasetObjParts(datasetIndex):
                 chairJoints[label].append(partJoints)
         with open(dataset_path + "models/joints/"+modelNum, 'wb') as output:
             pickle.dump(chairJoints, output, pickle.HIGHEST_PROTOCOL)
-        # print(chairJoints)
+        print(chairJoints)
 
     for part in chairParts:
         if(len(chairParts[part]['text']) > 0):
