@@ -15,7 +15,7 @@ from MLStatics import *
 
 if __name__ == "__main__":
     # take 10 random chairs and form collections
-    sourceChairCount = 10
+    sourceChairCount = 100
     datasetIndices = []
     for i in range(sourceChairCount):
         randomIndex = int(random.randrange(1, 6201))
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         models.append(model)
 
     # generate 100 new chairs
-    generatedChairCount = 100
+    generatedChairCount = 200
     newChairs = []
     for i in progressbar(range(generatedChairCount), "Generating Chairs"):
         newChair = mpv.generateChair(models)

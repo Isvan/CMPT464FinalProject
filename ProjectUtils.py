@@ -77,17 +77,20 @@ def vdistancesql(inp, b):
         dsum = dsum/.0025
         if(dsum < 1):
             dsum = 1
+        dsum = math.sqrt(dsum)
         result.append([dsum, dsum, dsum])
 
     return np.array(result)
 
 
 def jointCentroid(vertices, indices):
-    centroid = [0, 0, 0]
-    for index in indices:
-        centroid = centroid+vertices[index]
-    centroid = centroid/len(indices)
-    return centroid
+    # centroid = [0, 0, 0]
+    # for index in indices:
+    #     centroid = centroid+vertices[index]
+    # centroid = centroid/len(indices)
+    # print(centroid, "centroid")
+
+    return np.average(vertices[indices], axis=0)
 
 
 def translateMeshVec(meshA, vector: list):
@@ -99,9 +102,14 @@ def connectJoints(parts):
     # parts = array of parts
     # for each joint from each part, move vertices near joint to point on surface of matching part
     partIndices = {'back': -1, 'seat': -1, 'leg': -1, 'arm rest': -1}
-    threshold = 0.2
+    threshold = 0.1
     for iter, part in enumerate(parts):
         partIndices[part.label] = iter
+    bbpartmeshes = []
+    for part in parts:
+        bbpartmeshes.append(trimesh.convex.convex_hull(
+            part.mesh, qhull_options='QbB Pp Qt'))
+
     '''
     # match joints in part with joints from other part
     # ie 4 leg joints go to 4 closest seat joints if too far don't move
@@ -119,42 +127,51 @@ def connectJoints(parts):
 
     seat: leg: [[]]
     '''
-    if(False):
-        for part in parts:
-            if(part.label != 'seat'):
-                translation = [0, 0, 0]
-                for label, indices in part.joints:
+    partNameorder = ['arm rest', 'leg', 'back', 'seat']
+    if(True):
+        for name in partNameorder:
+            part = parts[partIndices[name]]
+            translation = [0, 0, 0]
+            for label, indices in part.joints:
 
-                    centroid = jointCentroid(part.mesh.vertices, indices)
-                    # get all joints from joint label matching part.label
-                    matchingJoints = []
-                    centroids = []
-                    try:
-                        for mlabel, mindices in parts[partIndices[label]].joints:
-                            if mlabel == part.label:
-                                matchingJoints.append((mlabel, mindices))
-                                centroids.append(
-                                    jointCentroid(parts[partIndices[label]].mesh.vertices, mindices))
-                    except IndexError:
-                        print("label is: ", label,
-                              "\nindices is: ", partIndices)
-                    closest = -1
-                    min_d = 10
-                    for iter, c in enumerate(centroids):
-                        cdist = vdistancesq(centroid, c)
-                        if(cdist < min_d and cdist < .002):
-                            closest = iter
-                            min_d = cdist
-                    if(closest > -1):
-                        translation += (centroids[closest] -
-                                        centroid)/len(part.joints)
-                    else:
+                centroid = jointCentroid(part.mesh.vertices, indices)
+                # get all joints from joint label matching part.label
+                matchingJoints = []
+                centroids = []
+                try:
+                    for mlabel, mindices in parts[partIndices[label]].joints:
+                        if mlabel == part.label:
+                            matchingJoints.append((mlabel, mindices))
+                            centroids.append(
+                                jointCentroid(parts[partIndices[label]].mesh.vertices, mindices))
+                except IndexError:
+                    print("label is: ", label,
+                          "\nindices is: ", partIndices)
+                closest = -1
+                min_d = 10
+                for iter, c in enumerate(centroids):
+                    cdist = vdistancesq(centroid, c)
+                    if(cdist < min_d and cdist < .05):
+                        closest = iter
+                        min_d = cdist
+                if(closest > -1):
+                    translation = (centroids[closest] -
+                                   centroid)
 
-                        closest_point = trimesh.proximity.closest_point(
-                            parts[partIndices[label]].mesh, [centroid])[0]
-                        translation += (closest_point[0] -
-                                        centroid)
-                #translateMeshVec(part.mesh, translation)
+                else:
+                    closest_point = trimesh.proximity.closest_point(
+                        bbpartmeshes[partIndices[label]], [centroid])[0]
+                    translation = (closest_point[0] - centroid)
+                part.mesh.vertices += translation / \
+                    np.maximum([1.0, 1.0, 1.0], (vdistancesql(
+                        part.mesh.vertices, centroid)))
+
+                #     closest_point = trimesh.proximity.closest_point(
+                #         parts[partIndices[label]].mesh, [centroid])[0]
+                #     translation += (closest_point[0] -
+                #                     centroid)
+                # translateMeshVec(part.mesh, translation)
+
             # move vertices based on distance from centroid
             # for label, indices in part.joints:
             #     centroid = jointCentroid(part.mesh.vertices, indices)
@@ -167,21 +184,27 @@ def connectJoints(parts):
             #                 max(1.0, (vdistancesq(v, centroid)*1000))
 
     for i in range(0, 1):
-        for part in parts:
+        for name in partNameorder:
+            part = parts[partIndices[name]]
             for label, indices in part.joints:
-                for ind in indices:
-                    closest_point_info = trimesh.proximity.closest_point(
-                        parts[partIndices[label]].mesh, [part.mesh.vertices[ind]])
-                    closest_point = closest_point_info[0][0]
-                    cp_dist = closest_point_info[1][0]
-                    # if(cp_dist < threshold/20):
-                    #     mask = np.ones(len(part.mesh.vertices), np.bool)
-                    #     mask[indices] = 0
-                    #     for v in part.mesh.vertices[mask]:
-                    #         v += (closest_point-v)/max(
-                    #             1.0, (vdistancesq(v, closest_point)*1000))
-                    if(cp_dist < threshold):
-                        part.mesh.vertices[ind] = closest_point
+
+                # for ind in indices:
+                closest_point_info = trimesh.proximity.closest_point(
+                    bbpartmeshes[partIndices[label]], part.mesh.vertices[indices])
+                closest_point = closest_point_info[0]
+                cp_dist = closest_point_info[1]
+                newind = np.where(cp_dist < threshold)[0]
+                closest_point = closest_point[newind]
+                cp_dist = indices[newind]
+                part.mesh.vertices[cp_dist] = closest_point
+                # if(cp_dist < threshold/20):
+                #     mask = np.ones(len(part.mesh.vertices), np.bool)
+                #     mask[indices] = 0
+                #     for v in part.mesh.vertices[mask]:
+                #         v += (closest_point-v)/max(
+                #             1.0, (vdistancesq(v, closest_point)*1000))
+                # if(cp_dist < threshold):
+
     for part in parts:
         for label, indices in part.joints:
             if partIndices[label] < 0:
@@ -199,28 +222,30 @@ def connectJoints(parts):
                 for ind in indices:
                     part.mesh.vertices[ind][ind1] = centroid[ind1]
                     part.mesh.vertices[ind][ind2] = centroid[ind2]
-            else:
-                for ind in indices:
-                    closest_point_info = trimesh.proximity.closest_point(
-                        parts[partIndices[label]].mesh, [part.mesh.vertices[ind]])
-                    closest_point = closest_point_info[0][0]
-                    cp_dist = closest_point_info[1][0]
-                    if cp_dist > threshold:
-                        centroid = jointCentroid(part.mesh.vertices, indices)
-                        jointExts = jointExtents(part.mesh.vertices[indices])
-                        if max(jointExts) == jointExts[0]:
-                            ind1 = 1
-                            ind2 = 2
-                        if max(jointExts) == jointExts[1]:
-                            ind1 = 0
-                            ind2 = 2
-                        if max(jointExts) == jointExts[2]:
-                            ind1 = 0
-                            ind2 = 1
-                        for ind in indices:
-                            part.mesh.vertices[ind][ind1] = centroid[ind1]
-                            part.mesh.vertices[ind][ind2] = centroid[ind2]
-                        break
+            elif label == 'seat':
+                centroid = jointCentroid(part.mesh.vertices, indices)
+                jointExts = jointExtents(part.mesh.vertices[indices])
+                if max(jointExts) == jointExts[0]:
+                    ind1 = 1
+                    ind2 = 2
+                if max(jointExts) == jointExts[1]:
+                    ind1 = 0
+                    ind2 = 2
+                if max(jointExts) == jointExts[2]:
+                    ind1 = 0
+                    ind2 = 1
+                closest_point_info = trimesh.proximity.closest_point(
+                    parts[partIndices[label]].mesh, part.mesh.vertices[indices])
+                for iter, ind in enumerate(indices):
+
+                    closest_point = closest_point_info[0][iter]
+                    cp_dist = closest_point_info[1][iter]
+                    # if cp_dist > threshold:
+                    part.mesh.vertices[ind] = closest_point
+                    # for thisind in indices:
+                    # part.mesh.vertices[ind][ind1] = centroid[ind1]
+                    # part.mesh.vertices[ind][ind2] = centroid[ind2]
+                    # break
 
     # for part in parts:
     #     # result = trimesh.remesh.subdivide(
@@ -273,6 +298,7 @@ def lerp(a, b, t):
 def inverseLerp(a, b, value):
     num = (value-a)/(b-a)
     return clamp(num, 0, 1)
+
 
 def randomInt(intA, intB):
     return int(random.randrange(intA, intB))

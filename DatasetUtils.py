@@ -202,7 +202,8 @@ def getDatasetObjParts(datasetIndex):
                 trimesh.base.Trimesh(), part_arrays[key])
             # thismesh.visual.face_colors = np.full(
             #     shape=[thismesh.faces.shape[0], 4], fill_value=trimesh.visual.color.hex_to_rgba(part_colors[key]))
-
+            if(key != 'seat'):
+                trimesh.repair.fix_normals(thismesh)
             parts.append((thismesh, 'grouped', key, chairJoints[key]))
 
     return parts
