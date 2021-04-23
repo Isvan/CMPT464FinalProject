@@ -59,16 +59,16 @@ def parseDatasetChairTuples(modelIndex, partsTuples):
     modelParts = []
 
     # first make a pass on grouped
-    for partMesh, partSide, partLabel in partsTuples:
+    for partMesh, partSide, partLabel, pjoints in partsTuples:
         if partSide != 'grouped':
             continue
 
         # Add model part
-        part = mpv.Part(mesh=partMesh, label=partLabel)
+        part = mpv.Part(mesh=partMesh, label=partLabel, joints=pjoints)
         modelParts.append(part)
 
     # now make a pass on non grouped
-    for partMesh, partSide, partLabel in partsTuples:
+    for partMesh, partSide, partLabel, _ in partsTuples:
         if partSide == 'grouped':
             continue
 
@@ -125,7 +125,7 @@ def runProgram(datasetIndices):
 
     # run the program
     models = []
-    for index in progressbar(datasetIndices, "Fetching Model Data"):
+    for index in progressbar(newInput, "Fetching Model Data"):
         partsTuples = dt.getDatasetObjParts(index)
         modelParts = parseDatasetChairTuples(index, partsTuples)
         model = mpv.Model(modelParts)

@@ -29,8 +29,8 @@ if __name__ == "__main__":
         model.name = str(index)
         models.append(model)
 
-    # generate 10 new chairs
-    generatedChairCount = 10
+    # generate 100 new chairs
+    generatedChairCount = 100
     newChairs = []
     for i in progressbar(range(generatedChairCount), "Generating Chairs"):
         newChair = mpv.generateChair(models)
@@ -66,6 +66,9 @@ if __name__ == "__main__":
     for chair, value in sortedChairs:
         print(value)
         chairsToDisplay.append(chair)
+
+    # we would need only 10 top chairs
+    chairsToDisplay = chairsToDisplay[:10]
 
     # export the chairs as .objs
     for i in range(len(chairsToDisplay)):

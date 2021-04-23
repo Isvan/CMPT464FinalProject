@@ -12,18 +12,26 @@ import trimesh
 
 
 class Part:
-    def __init__(self, mesh, label=None, side=None):
+    def __init__(self, mesh, label=None, side=None, joints=None):
         self.mesh = copy.deepcopy(mesh)
         if label != None:
             self.label = label
 
         if side != None:
             self.side = side
+        if joints != None:
+            self.joints = joints
 
         self.groupedParts = []
 
     def getSide(self, side):
         assert len(self.groupedParts) > 0
+        for part in self.groupedParts:
+            if part.side == side:
+                return copy.deepcopy(part)
+        return None
+
+    def getJoints(self, side):
         for part in self.groupedParts:
             if part.side == side:
                 return copy.deepcopy(part)
@@ -192,30 +200,8 @@ def generateChair(inputModels):
     resultParts = []
     for part in randomModel.parts:
         newPart = chairParts[part.label]
-
-        # if randomly picked mesh is a whole single mesh, then we should just place that mesh in stead of all non-combined present parts
-        # same goes if the picked part can be a whole mesh only
-        if newPart.isGroupedOnly or part.isGroupedOnly:
-            # the part.mesh is by default a combined mesh
-            meshToAppend = newPart.mesh
-            pUtils.scaleMeshAToB(meshToAppend, part.mesh)
-            pUtils.translateMeshAToB(meshToAppend, part.mesh)
-            resultParts.append(Part(mesh=meshToAppend))
-            continue
-
-        # otherwise, collection part has left and right and given part has extra parts within
-        for groupedPart in part.groupedParts:
-            meshToAppend = None
-            if groupedPart.side == 'right':
-                meshToAppend = newPart.getSide('right').mesh
-            else:
-                meshToAppend = newPart.getSide('left').mesh
-
-            pUtils.scaleMeshAToB(meshToAppend, groupedPart.mesh)
-            pUtils.translateMeshAToB(meshToAppend, groupedPart.mesh)
-
-            resultParts.append(Part(mesh=meshToAppend))
-
+        resultParts.append(newPart)
+    pUtils.connectJoints(resultParts)
     return Model(resultParts)
 
 
