@@ -125,7 +125,7 @@ def runProgram(datasetIndices):
 
     # run the program
     models = []
-    for index in progressbar(datasetIndices, "Fetching Model Data"):
+    for index in progressbar(newInput, "Fetching Model Data"):
         partsTuples = dt.getDatasetObjParts(index)
         modelParts = parseDatasetChairTuples(index, partsTuples)
         model = mpv.Model(modelParts)

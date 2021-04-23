@@ -165,6 +165,8 @@ def removeFromModelListByName(models, name):
 # API END
 
 # Takes random pieces from collection and puts them together in a mesh, replacing parts of a random chair
+
+
 def generateChair(inputModels):
     # we use a random model to "fill" out with new parts
     randomModel = inputModels[pUtils.randomInt(0, len(inputModels))]
@@ -198,32 +200,7 @@ def generateChair(inputModels):
     resultParts = []
     for part in randomModel.parts:
         newPart = chairParts[part.label]
-
-        # if randomly picked mesh is a whole single mesh, then we should just place that mesh in stead of all non-combined present parts
-        # same goes if the picked part can be a whole mesh only
-        # if newPart.isGroupedOnly or part.isGroupedOnly:
-        # the part.mesh is by default a combined mesh
-        meshToAppend = newPart
-        translation = pUtils.translateMeshAToB(meshToAppend.mesh, part.mesh)
-        scale = pUtils.scaleMeshAToB(meshToAppend.mesh, part.mesh)
-        # print(meshToAppend.joints[0])
-        #pUtils.transformJoints(scale, translation, meshToAppend)
-        # print(meshToAppend.joints[0])
-        resultParts.append(meshToAppend)
-        # for joint in meshToAppend.joints:
-
-        # otherwise, collection part has left and right and given part has extra parts within
-        # for groupedPart in part.groupedParts:
-        #     meshToAppend = None
-        #     if groupedPart.side == 'right':
-        #         meshToAppend = newPart.getSide('right').mesh
-        #     else:
-        #         meshToAppend = newPart.getSide('left').mesh
-
-        #     pUtils.scaleMeshAToB(meshToAppend, groupedPart.mesh)
-        #     pUtils.translateMeshAToB(meshToAppend, groupedPart.mesh)
-
-        #     resultParts.append(Part(mesh=meshToAppend))
+        resultParts.append(newPart)
     pUtils.connectJoints(resultParts)
     return Model(resultParts)
 

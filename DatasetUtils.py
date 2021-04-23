@@ -1,6 +1,6 @@
 import json
 import numpy as np
-from os import listdir, mkdir
+from os import listdir, mkdir, makedirs, path
 import pyrender
 import re
 import trimesh
@@ -171,6 +171,11 @@ def getDatasetObjParts(datasetIndex):
 
     sorted_names = listdir(partPath+modelNum+'/')
     sorted_names.sort(key=natural_keys)
+
+    # ensure that directory always exists
+    directory = path.dirname(dataset_path + "models/joints/")
+    if not path.exists(directory):
+        makedirs(directory)
 
     try:
         with open(dataset_path + "models/joints/"+modelNum,  "rb") as Joint:
