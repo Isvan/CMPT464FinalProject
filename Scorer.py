@@ -28,7 +28,7 @@ class Scorer:
         self.model = nnModels.getMultiViewModel()
 
         self.model.load_weights(checkpointFilepath +
-                                "tripleView"+"/checkpoint")
+                                "tripleView"+"/checkpoint"+str(img_height)).expect_partial()
 
     def score(self, depthPerspectives):
         # Technically we should batch compute but that makes it a much bigger pain to debug and the speed loss is minumal
@@ -42,15 +42,15 @@ class Scorer:
         top = cv2.resize(depthPerspectives[2], dsize=(img_width, img_height),
                          interpolation=cv2.INTER_CUBIC)
 
-        front = np.resize(front, (1, 80, 80, 1))
+        front = np.resize(front, (1, img_width, img_width, 1))
         front = front.astype(np.float32)
         front = 1. - front / 255.
 
-        side = np.resize(side, (1, 80, 80, 1))
+        side = np.resize(side, (1, img_width, img_width, 1))
         side = side.astype(np.float32)
         side = 1. - side / 255.
 
-        top = np.resize(top, (1, 80, 80, 1))
+        top = np.resize(top, (1, img_width, img_width, 1))
         top = top.astype(np.float32)
         top = 1. - top / 255.
 

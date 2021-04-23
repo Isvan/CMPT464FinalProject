@@ -27,16 +27,18 @@ def printGraphOfResults(history, title):
     plt.subplot(1, 2, 1)
     plt.plot(epochs_range, acc, label='Training Accuracy')
     plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+    plt.ylim([0.8, 1.0])
     plt.legend(loc='lower right')
     plt.title('Training and Validation Accuracy')
 
     plt.subplot(1, 2, 2)
     plt.plot(epochs_range, loss, label='Training Loss')
     plt.plot(epochs_range, val_loss, label='Validation Loss')
+    plt.ylim([0.0, 0.4])
     plt.legend(loc='upper right')
-    plt.title('Training and Validation Loss For ' + title)
-    plt.savefig(graphResultsFolder+title + "-trainingResult" +
-                str(training_epochs)+"-"+str(batch_size)+".png")
+    plt.title('Training and Validation Loss')
+    plt.savefig(graphResultsFolder+title + "-trainingResult" + str(img_height) +
+                str(batch_size)+"-"+str(training_epochs)+".png")
     plt.close()
 
 
@@ -63,7 +65,7 @@ def runTripleSingleNN():
 
         model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=os.path.join(checkpointFilepath +
-                                  dataTitlesTripleView[index], "checkpoint", ""),
+                                  dataTitlesTripleView[index], "checkpoint"+str(img_height), ""),
             save_weights_only=True,
             # monitor='val_accuracy',
             # mode='auto',
@@ -102,7 +104,7 @@ def runSingleTripleBranchNN():
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=os.path.join(
-            checkpointFilepath, "tripleView", "checkpoint"),
+            checkpointFilepath, "tripleView", "checkpoint"+str(img_height)),
         save_weights_only=True,
         # monitor='val_accuracy',
         # mode='auto',
