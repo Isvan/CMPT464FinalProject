@@ -100,7 +100,9 @@ def getMultiViewModel():
     model = tf.keras.Model(inputs=[topViewInput, sideViewInput,
                                    frontViewInput], outputs=[output])
 
-    model.compile(optimizer='adam',
+    optimizer = tf.keras.optimizers.Adam()
+
+    model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(
                       from_logits=True),
                   metrics=['accuracy'],

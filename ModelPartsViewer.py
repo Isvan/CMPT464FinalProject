@@ -10,6 +10,7 @@ import sys
 from Scorer import Scorer
 import trimesh
 
+
 class Part:
     def __init__(self, mesh, label=None, side=None):
         self.mesh = copy.deepcopy(mesh)
@@ -31,7 +32,6 @@ class Part:
     @property
     def isGroupedOnly(self):
         return len(self.groupedParts) <= 0
-
 
 
 class Model:
@@ -193,7 +193,7 @@ def generateChair(inputModels):
             resultParts.append(Part(mesh=meshToAppend))
 
     return Model(resultParts)
-    
+
 
 def generateChairViewer(viewer):
     generatedChair = generateChair(modelPartsViewer.inputModels)
@@ -204,6 +204,8 @@ def generateChairViewer(viewer):
 
 # Takes a screenshot of the present chair model and saves it to the folder.
 # Demonstrates how to turn model into a set of pixels.
+
+
 def takeScreenshot(viewer):
     currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
 
@@ -342,9 +344,10 @@ def takeNegativeScreenShot(viewer):
 
     im = Image.fromarray(perspectives[2])
     im.save(os.path.join(outputDir, str(currentIndex) + '.png'))
-    print("Saved as a Negative Chair")
+    print("Saved as a Negative Chair " + outputDir + str(currentIndex))
     generateChairViewer(viewer)
     pass
+
 
 def exportModelAsObj(model, filePath):
     directory = os.path.dirname('export_objs/')
@@ -355,12 +358,14 @@ def exportModelAsObj(model, filePath):
 
     resultCombinedMesh = trimesh.base.Trimesh()
     for part in model.parts:
-        resultCombinedMesh = trimesh.util.concatenate([resultCombinedMesh, part.mesh])
+        resultCombinedMesh = trimesh.util.concatenate(
+            [resultCombinedMesh, part.mesh])
 
     obj = trimesh.exchange.obj.export_obj(resultCombinedMesh)
     f = open(path, "w")
     f.write(obj)
     f.close()
+
 
 def exportCurrentChair(viewer):
     currentModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
