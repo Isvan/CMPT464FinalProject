@@ -5,6 +5,7 @@ dataset/__pycache__
 dataset/Chair
 screenshots
 export_objs
+.input_history
 
 #ML Stuff
 *.bmp
