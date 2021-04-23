@@ -70,3 +70,6 @@ def lerp(a, b, t):
 def inverseLerp(a, b, value):
     num = (value-a)/(b-a)
     return clamp(num, 0, 1)
+
+def randomInt(intA, intB):
+    return int(random.randrange(intA, intB))
