@@ -201,8 +201,8 @@ def generateChair(inputModels):
     resultParts = []
     for part in randomModel.parts:
         newPart = chairParts[part.label]
-        pUtils.scaleMeshAToB(newPart, part.mesh)
-        pUtils.translateMeshAToB(newPart, part.mesh)
+        pUtils.scaleMeshAToB(newPart.mesh, part.mesh)
+        pUtils.translateMeshAToB(newPart.mesh, part.mesh)
         resultParts.append(newPart)
     pUtils.connectJoints(resultParts)
     return Model(resultParts)
