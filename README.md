@@ -55,6 +55,10 @@
 - Basic UI: one set of arrows to move between the meshes and another set of arrows to move between the parts in a particular mesh (or anything else simple and effective)
 - Requires mesh-parts association which in turn requires dataset processing
 
-### MVP (April 14th) - In Progress
+### MVP (April 14th) - Done
 
 - First working version of the project.
+
+### Refined MVP (April 21st) - In Progress
+
+- Decent general functionality. Proper scoring and mesh welding.
