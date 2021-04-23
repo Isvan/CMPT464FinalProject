@@ -90,8 +90,6 @@ def getMultiViewModel():
 
     concatted = layers.Flatten()(concatted)
 
-    dense = layers.Dense(1024)(concatted)
-    dense = layers.LeakyReLU(alpha=0.1)(dense)
     dense = layers.Dense(512)(concatted)
     dense = layers.LeakyReLU(alpha=0.1)(dense)
     dense = layers.Dropout(0.5)(dense)
@@ -100,7 +98,7 @@ def getMultiViewModel():
     model = tf.keras.Model(inputs=[topViewInput, sideViewInput,
                                    frontViewInput], outputs=[output])
 
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.Nadam()
 
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(
