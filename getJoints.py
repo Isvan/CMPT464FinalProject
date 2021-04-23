@@ -20,6 +20,25 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r'(\d+)', text)]
 
 
+def dtoBB2(bb, vert):
+    # print(bb)
+    bx_min, bx_max = bb[0][0], bb[1][0]
+    by_min, by_max = bb[0][1], bb[1][1]
+    bz_min, bz_max = bb[0][2], bb[1][2]
+    result = []
+    for v in vert:
+        px = v[0]
+        py = v[1]
+        pz = v[2]
+        dx = max(bx_min - px, 0, px - bx_max)
+        dy = max(by_min - py, 0, py - by_max)
+        dz = max(bz_min - pz, 0, pz - bz_max)
+        result.append(dx*dx + dy*dy + dz*dz)
+    result = np.array(result)
+
+    return result  # Math.sqrt(dx*dx + dy*dy +dz*dz)
+
+
 def findJoints(dataset_path, json_data_path, part_path, part_labels, start, end):
     for datasetIndex in range(start, end+1):
 
@@ -53,7 +72,6 @@ def findJoints(dataset_path, json_data_path, part_path, part_labels, start, end)
             for iter, filename in enumerate(sorted_names):
                 if filename.endswith(".obj"):
                     partLabel = part_labels.get(plabels[iter])
-                    # pfile = open(part_path+modelNum+'/'+filename)
                     partTri = trimesh.load(part_path+modelNum+'/'+filename)
                     partTrihull = trimesh.convex.convex_hull(
                         partTri, qhull_options='QbB Pp Qt')
@@ -61,33 +79,28 @@ def findJoints(dataset_path, json_data_path, part_path, part_labels, start, end)
                     indivhulls.append((partLabel, partTrihull))
             psums = {'back': 0, 'seat': 0, 'leg': 0, 'arm rest': 0}
             chairJoints = {'back': [], 'seat': [], 'leg': [], 'arm rest': []}
-            for label, part in indivParts:
+            for i in range(len(indivParts)):
+                label, part = indivParts[i]
                 partJoints = []
-                for olabel, opart in indivhulls:
-                    curJoint = []
-                    if(olabel != label):
 
-                        # This needs to be multithreaded
-                        # for iter, vertex in enumerate(part.vertices):
-                        #     dist = trimesh.proximity.closest_point(
-                        #         opart, part.vertices)[1]
-                        #     if(dist < threshold):
-                        #        curJoint.append(iter+psums[label])
-                        # end of multithreading
-                        # curJoint = [index0,index1........]
-                        curJoint = trimesh.proximity.closest_point(
-                            opart, part.vertices)[1]
-                        curJoint = np.where(curJoint < .005)[0]
-                        # consider iterating through vertices in part to get the indices properly ie if if v==curjoint then append that index to joint....
-                        # print(part.vertices[curJoint])
-                        if(len(curJoint) > 0):
-                            curJoint = curJoint+psums[label]
-                            partJoints.append((olabel, curJoint))
-                            # print(partJoints)
+                for j in range(len(indivhulls)):
+                    olabel, opart = indivhulls[j]
+                    curJoint = []
+                    if(i != j and olabel != label):
+                        bb_dists = dtoBB2(opart.bounds, part.vertices) # get distance from vertices to bounding box of other part
+                        cand_vert_indices = np.where(bb_dists < 0.03)[0]
+                        cand_verts = part.vertices[cand_vert_indices]
+                        if(len(cand_vert_indices) > 0):#use candidate points to find indices of joint vertices
+                            curJoint = trimesh.proximity.closest_point(
+                                opart, cand_verts)[1]
+                            curJoint = np.where(curJoint < .025)[0] 
+                            curJoint = cand_vert_indices[curJoint]
+                            if(len(curJoint) > 0):
+                                curJoint = curJoint+psums[label]
+                                partJoints.append((olabel, curJoint))
                 psums[label] += len(part.vertices)
-                # print(psums)
                 if(len(partJoints) > 0):
-                    chairJoints[label].append(partJoints)
+                    chairJoints[label] += (partJoints)
             with open(dataset_path + "models/joints/"+modelNum, 'wb') as output:
                 pickle.dump(chairJoints, output, pickle.HIGHEST_PROTOCOL)
 
@@ -114,18 +127,6 @@ def main():
             end += offset
         for thread in threads:
             thread.result()
-        # f1 = executor.submit(findJoints, dataset_path,
-        #                      json_data_path, part_path, part_labels, 1, 8)
-        # f2 = executor.submit(findJoints, dataset_path,
-        #                       json_data_path, part_path, part_labels, 3, 4)
-        # f3 = executor.submit(findJoints, dataset_path,
-        #                       json_data_path, part_path, part_labels, 5, 6)
-        # f4 = executor.submit(findJoints, dataset_path,
-        #                       json_data_path, part_path, part_labels, 7, 8)
-        # f1.result()
-        # f2.result()
-        # f3.result()
-        # f4.result()
 
 
 if __name__ == "__main__":

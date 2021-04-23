@@ -165,8 +165,6 @@ def removeFromModelListByName(models, name):
 # API END
 
 # Takes random pieces from collection and puts them together in a mesh, replacing parts of a random chair
-
-
 def generateChair(inputModels):
     # we use a random model to "fill" out with new parts
     randomModel = inputModels[pUtils.randomInt(0, len(inputModels))]
@@ -206,8 +204,8 @@ def generateChair(inputModels):
         # if newPart.isGroupedOnly or part.isGroupedOnly:
         # the part.mesh is by default a combined mesh
         meshToAppend = newPart
-        #scale = pUtils.scaleMeshAToB(meshToAppend.mesh, part.mesh)
-        #translation = pUtils.translateMeshAToB(meshToAppend.mesh, part.mesh)
+        translation = pUtils.translateMeshAToB(meshToAppend.mesh, part.mesh)
+        scale = pUtils.scaleMeshAToB(meshToAppend.mesh, part.mesh)
         # print(meshToAppend.joints[0])
         #pUtils.transformJoints(scale, translation, meshToAppend)
         # print(meshToAppend.joints[0])

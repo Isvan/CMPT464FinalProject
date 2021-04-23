@@ -45,11 +45,41 @@ def translateMeshAToB(meshA, meshB):
     return translationVector
 
 
+def jointExtents(vertices):
+    minx, maxx = vertices[0][0], vertices[0][0]
+    miny, maxy = vertices[0][1], vertices[0][1]
+    minz, maxz = vertices[0][2], vertices[0][2]
+    for v in vertices:
+        minx = min(minx, v[0])
+        maxx = max(maxx, v[0])
+
+        miny = min(miny, v[1])
+        maxy = max(maxy, v[1])
+
+        minz = min(minz, v[2])
+        maxz = max(maxz, v[2])
+    return [maxx-minx, maxy-miny, maxz-minz]
+
+
 def vdistancesq(a, b):
     dsum = 0
     for i in range(3):
         dsum = dsum+(a[i]-b[i])*(a[i]-b[i])
     return dsum
+
+
+def vdistancesql(inp, b):
+    result = []
+    for a in inp:
+        dsum = 0
+        for i in range(3):
+            dsum = dsum+(a[i]-b[i])*(a[i]-b[i])
+        dsum = dsum/.0025
+        if(dsum < 1):
+            dsum = 1
+        result.append([dsum, dsum, dsum])
+
+    return np.array(result)
 
 
 def jointCentroid(vertices, indices):
@@ -69,13 +99,14 @@ def connectJoints(parts):
     # parts = array of parts
     # for each joint from each part, move vertices near joint to point on surface of matching part
     partIndices = {'back': -1, 'seat': -1, 'leg': -1, 'arm rest': -1}
+    threshold = 0.2
     for iter, part in enumerate(parts):
         partIndices[part.label] = iter
     '''
-    #match joints in part with joints from other part
+    # match joints in part with joints from other part
     # ie 4 leg joints go to 4 closest seat joints if too far don't move
 
-    #if no matching joints then move to surface
+    # if no matching joints then move to surface
 
     # moving
     #       first translate the whole model to make the joint closer
@@ -88,69 +119,115 @@ def connectJoints(parts):
 
     seat: leg: [[]]
     '''
+    if(False):
+        for part in parts:
+            if(part.label != 'seat'):
+                translation = [0, 0, 0]
+                for label, indices in part.joints:
 
-    for part in parts:
-        if(part.label != 'seat'):
-            for joint in part.joints:
-                print("joint is: ", joint)
-                label = joint[0][0]
-                print("label: ", label)
-                indices = joint[0][1]
-                centroid = jointCentroid(part.mesh.vertices, indices)
-                # get all joints from joint label matching part.label
-                matchingJoints = []
-                centroids = []
-                try:
-                    for mjoint in parts[partIndices[label]].joints:
-                        if mjoint[0][0] == part.label:
-                            matchingJoints.append(mjoint)
-                            centroids.append(
-                                jointCentroid(parts[partIndices[label]].mesh.vertices, mjoint[0][1]))
-                except IndexError:
-                    print("label is: ", label, "\nindices is: ", partIndices)
-                closest = -1
-                min_d = 10
-                for iter, c in enumerate(centroids):
-                    cdist = vdistancesq(centroid, c)
-                    if(cdist < min_d and cdist < .002):
-                        closest = iter
-                        min_d = cdist
-                # if(closest > -1):
-                #     translateMeshVec(part.mesh, (centroids[closest]-centroid))
-                # else:
+                    centroid = jointCentroid(part.mesh.vertices, indices)
+                    # get all joints from joint label matching part.label
+                    matchingJoints = []
+                    centroids = []
+                    try:
+                        for mlabel, mindices in parts[partIndices[label]].joints:
+                            if mlabel == part.label:
+                                matchingJoints.append((mlabel, mindices))
+                                centroids.append(
+                                    jointCentroid(parts[partIndices[label]].mesh.vertices, mindices))
+                    except IndexError:
+                        print("label is: ", label,
+                              "\nindices is: ", partIndices)
+                    closest = -1
+                    min_d = 10
+                    for iter, c in enumerate(centroids):
+                        cdist = vdistancesq(centroid, c)
+                        if(cdist < min_d and cdist < .002):
+                            closest = iter
+                            min_d = cdist
+                    if(closest > -1):
+                        translation += (centroids[closest] -
+                                        centroid)/len(part.joints)
+                    else:
 
-                closest_point = trimesh.proximity.closest_point(
-                    parts[partIndices[label]].mesh, [centroid])[0]
-                translation = (closest_point[0]-centroid)
-                print("translation vector: ", translation)
+                        closest_point = trimesh.proximity.closest_point(
+                            parts[partIndices[label]].mesh, [centroid])[0]
+                        translation += (closest_point[0] -
+                                        centroid)
+                #translateMeshVec(part.mesh, translation)
+            # move vertices based on distance from centroid
+            # for label, indices in part.joints:
+            #     centroid = jointCentroid(part.mesh.vertices, indices)
+            #     if partIndices[label] > -1:
+            #         closest_point = trimesh.proximity.closest_point(
+            #             parts[partIndices[label]].mesh, [centroid])[0][0]
+
+            #         for v in part.mesh.vertices:
+            #             v += (closest_point-v) / \
+            #                 max(1.0, (vdistancesq(v, centroid)*1000))
+
+    for i in range(0, 1):
+        for part in parts:
+            for label, indices in part.joints:
                 for ind in indices:
-                    # thisT = translation / \
-                    #     max(1.0,
-                    #         (vdistancesq(vertex[ind], location[0])/.05))
-                    part.mesh.vertices[ind] += translation
-                #translateMeshVec(part.mesh, trans_distance)
-            # label = joint[0][0]
-            # location = [joint[0][1]]
-            # #print("location is:", location, np.shape(location))
-            # # location.reshape((3, 1))
-            # # print("location is:", location, np.shape(location))
+                    closest_point_info = trimesh.proximity.closest_point(
+                        parts[partIndices[label]].mesh, [part.mesh.vertices[ind]])
+                    closest_point = closest_point_info[0][0]
+                    cp_dist = closest_point_info[1][0]
+                    # if(cp_dist < threshold/20):
+                    #     mask = np.ones(len(part.mesh.vertices), np.bool)
+                    #     mask[indices] = 0
+                    #     for v in part.mesh.vertices[mask]:
+                    #         v += (closest_point-v)/max(
+                    #             1.0, (vdistancesq(v, closest_point)*1000))
+                    if(cp_dist < threshold):
+                        part.mesh.vertices[ind] = closest_point
+    for part in parts:
+        for label, indices in part.joints:
+            if partIndices[label] < 0:
+                centroid = jointCentroid(part.mesh.vertices, indices)
+                jointExts = jointExtents(part.mesh.vertices[indices])
+                if max(jointExts) == jointExts[0]:
+                    ind1 = 1
+                    ind2 = 2
+                if max(jointExts) == jointExts[1]:
+                    ind1 = 0
+                    ind2 = 2
+                if max(jointExts) == jointExts[2]:
+                    ind1 = 0
+                    ind2 = 1
+                for ind in indices:
+                    part.mesh.vertices[ind][ind1] = centroid[ind1]
+                    part.mesh.vertices[ind][ind2] = centroid[ind2]
+            else:
+                for ind in indices:
+                    closest_point_info = trimesh.proximity.closest_point(
+                        parts[partIndices[label]].mesh, [part.mesh.vertices[ind]])
+                    closest_point = closest_point_info[0][0]
+                    cp_dist = closest_point_info[1][0]
+                    if cp_dist > threshold:
+                        centroid = jointCentroid(part.mesh.vertices, indices)
+                        jointExts = jointExtents(part.mesh.vertices[indices])
+                        if max(jointExts) == jointExts[0]:
+                            ind1 = 1
+                            ind2 = 2
+                        if max(jointExts) == jointExts[1]:
+                            ind1 = 0
+                            ind2 = 2
+                        if max(jointExts) == jointExts[2]:
+                            ind1 = 0
+                            ind2 = 1
+                        for ind in indices:
+                            part.mesh.vertices[ind][ind1] = centroid[ind1]
+                            part.mesh.vertices[ind][ind2] = centroid[ind2]
+                        break
 
-            # if(indices[label] > -1):
-            #     pos = trimesh.proximity.closest_point(
-            #         parts[indices[label]].mesh, location)[0]
-            #     translation = pos[0]-location[0]
-            #     for vertex in part.mesh.vertices:
-            #         # if(vdistancesq(vertex, location[0]) < .05):
-            #         thisT = translation / \
-            #             max(1.0,
-            #                 (vdistancesq(vertex, location[0])/.05))
-            #         vertex += thisT
-            #         if(vdistancesq(vertex, pos[0]) < .005):
-            #             vertex = trimesh.proximity.closest_point(
-            #                 parts[indices[label]].mesh, [vertex])[0][0]
-
-    #part[0].mesh.vertices += (pos-part[0].mesh.vertices)*distance_from_location
-    # https://computergraphics.stackexchange.com/questions/8195/how-to-convert-euler-angles-to-quaternions-and-get-the-same-euler-angles-back-fr
+    # for part in parts:
+    #     # result = trimesh.remesh.subdivide(
+    #     #     part.mesh.vertices, part.mesh.faces)
+    #     # part.mesh.vertices = result[0]
+    #     # part.mesh.faces = result[1]
+    #     trimesh.smoothing.filter_humphrey(part.mesh, iterations=2)
 
 
 def transformJoints(scale, translation, part):
