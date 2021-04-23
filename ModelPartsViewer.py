@@ -145,7 +145,13 @@ def getRandomCollectionPart(partType, inputModels):
         if requiredPart != None:
             break
 
-    return requiredPart
+    return requiredPart, model
+
+def removeFromModelListByName(models, name):
+    for model in models:
+        if model.name == name:
+            models.remove(model)
+            break
 
 
 # API END
@@ -154,17 +160,35 @@ def getRandomCollectionPart(partType, inputModels):
 
 
 def generateChair(inputModels):
-    # use original model as a template, not the new generated one
-    originalModelCount = len(inputModels)
-    randomModelIndex = int(random.randrange(0, originalModelCount))
-    randomModel = inputModels[randomModelIndex]
-    chairParts = {
-        'seat': getRandomCollectionPart('seat', inputModels),
-        'back': getRandomCollectionPart('back', inputModels),
-        'leg': getRandomCollectionPart('leg', inputModels),
-        'arm rest': getRandomCollectionPart('arm rest', inputModels)
-    }
+    # we use a random model to "fill" out with new parts
+    randomModel = inputModels[pUtils.randomInt(0, len(inputModels))]
 
+    # initialize chair parts by default to belong to the original model
+    chairParts = {
+        'seat': randomModel.getPartByLabel('seat'), 
+        'back': randomModel.getPartByLabel('back'), 
+        'leg': randomModel.getPartByLabel('leg'), 
+        'arm rest': randomModel.getPartByLabel('arm rest')}
+
+    # generator models holds the dynamic list of all possible chairs used for generation
+    generatorModels = inputModels.copy()
+
+    # we will fill the model by parts in random order
+    partLabels = ['seat', 'back', 'leg', 'arm rest']
+    random.shuffle(partLabels)
+
+    # find a part and then remove its chair from the list of suggestions
+    # if ran out of chairs - stop
+    for i in range(len(partLabels)):
+        if len(generatorModels) <= 0:
+            break
+
+        partLabel = partLabels[i]
+        newPart, refModel = getRandomCollectionPart(partLabel, generatorModels)
+        if newPart != None:
+            chairParts[partLabel] = newPart
+            removeFromModelListByName(generatorModels, refModel.name)
+            
     resultParts = []
     for part in randomModel.parts:
         newPart = chairParts[part.label]
