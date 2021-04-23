@@ -155,6 +155,7 @@ def getRandomCollectionPart(partType, inputModels):
 
     return requiredPart, model
 
+
 def removeFromModelListByName(models, name):
     for model in models:
         if model.name == name:
@@ -173,9 +174,9 @@ def generateChair(inputModels):
 
     # initialize chair parts by default to belong to the original model
     chairParts = {
-        'seat': randomModel.getPartByLabel('seat'), 
-        'back': randomModel.getPartByLabel('back'), 
-        'leg': randomModel.getPartByLabel('leg'), 
+        'seat': randomModel.getPartByLabel('seat'),
+        'back': randomModel.getPartByLabel('back'),
+        'leg': randomModel.getPartByLabel('leg'),
         'arm rest': randomModel.getPartByLabel('arm rest')}
 
     # generator models holds the dynamic list of all possible chairs used for generation
@@ -196,10 +197,12 @@ def generateChair(inputModels):
         if newPart != None:
             chairParts[partLabel] = newPart
             removeFromModelListByName(generatorModels, refModel.name)
-            
+
     resultParts = []
     for part in randomModel.parts:
         newPart = chairParts[part.label]
+        pUtils.scaleMeshAToB(newPart, part.mesh)
+        pUtils.translateMeshAToB(newPart, part.mesh)
         resultParts.append(newPart)
     pUtils.connectJoints(resultParts)
     return Model(resultParts)
