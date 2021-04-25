@@ -40,13 +40,13 @@ if __name__ == "__main__":
         datasetIndices = randomShuffledIndices[:randomAmount]
 
     if '-setA' in tokens:
-        datasetIndices = [369, 175, 5540]
+        datasetIndices = ['369', '175', '5540']
 
     if '-setB' in tokens:
-        datasetIndices = [2999, 2150, 3492, 4474, 2160]
+        datasetIndices = ['2999', '2150', '3492', '4474', '2160']
 
     if '-setC' in tokens:
-        datasetIndices = [1919, 3366, 3521, 3204, 1131, 173, 3749, 2313, 5117, 1920]
+        datasetIndices = ['1919', '3366', '3521', '3204', '1131', '173', '3749', '2313', '5117', '1920']
     
     # Start
     print('Running program for indices: '+str(datasetIndices))
