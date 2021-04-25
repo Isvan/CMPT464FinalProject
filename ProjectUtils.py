@@ -118,7 +118,7 @@ def matchPoints(a: list, b: list):
                     ind = iter
             new_a_order.append(ind)
     # print('a', a)
-    print('new_order', new_a_order)
+    # print('new_order', new_a_order)
     a += a[new_a_order]-a
     return a
 
@@ -161,7 +161,7 @@ def connectJointsBeta(parts):
         destination = np.average(toMatch, axis=0)
         origin = np.average(toMove, axis=0)
         parts[partIndices['leg']].mesh.vertices -= origin
-        print("transformed ", label, " to match ", label2)
+        # print("transformed ", label, " to match ", label2)
         parts[partIndices['leg']].mesh.apply_transform(legScale)
         parts[partIndices['leg']].mesh.vertices += destination
     else:
@@ -181,7 +181,7 @@ def connectJointsBeta(parts):
             1, [0, 0, 0])
         legScale[0, 0] = min(2, seatExtents[0]/legExtents[0])
         # legScale[1, 1] = toMatchExt[1]/toMoveExt[1]
-        legScale[2, 2] = seatExtents[2]/legExtents[2]
+        legScale[2, 2] = min(2, seatExtents[2]/legExtents[2])
 
         destination = parts[partIndices['seat']].mesh.centroid
 
@@ -191,35 +191,35 @@ def connectJointsBeta(parts):
         destination = [destination[0], origin[1] + seatBounds[0][1] -
                        legBounds[1][1], seatBounds[0][2]-parts[partIndices['leg']].mesh.bounds[0][2]]
         parts[partIndices['leg']].mesh.vertices += destination
-        print("transformed ", label, " to match ",
+        # print("transformed ", label, " to match ",
               label2, "with default method")
     if(len(jointCenters['back']['seat']) > 0 and len(jointCenters['seat']['back']) > 0):
         # JOINING SEATS TO BACKS
-        label = 'back'
-        label2 = 'seat'
-        seatBounds = parts[partIndices['seat']].mesh.bounds
-        toMove = jointCenters['back']['seat']
-        toMoveExt = jointExtents(toMove)
-        backBounds = parts[partIndices['back']].mesh.bounds
-        toMatch = jointCenters['seat']['back']
-        toMatchExt = jointExtents(toMatch)
+        label='back'
+        label2='seat'
+        seatBounds=parts[partIndices['seat']].mesh.bounds
+        toMove=jointCenters['back']['seat']
+        toMoveExt=jointExtents(toMove)
+        backBounds=parts[partIndices['back']].mesh.bounds
+        toMatch=jointCenters['seat']['back']
+        toMatchExt=jointExtents(toMatch)
         if toMoveExt[0] == 0:
-            toMoveExt[0] = 1
-            toMatchExt[0] = 1
+            toMoveExt[0]=1
+            toMatchExt[0]=1
         if(toMatchExt[0] < .1):
-            toMatchExt[0] = seatBounds[1][0]-seatBounds[0][0]
+            toMatchExt[0]=seatBounds[1][0]-seatBounds[0][0]
 
         if toMoveExt[2] < .05:
-            toMoveExt[2] = 1
-            toMatchExt[2] = 1
+            toMoveExt[2]=1
+            toMatchExt[2]=1
         if(toMatchExt[0] < .01):
-            toMoveExt[0] = 1
-            toMatchExt[0] = 1
+            toMoveExt[0]=1
+            toMatchExt[0]=1
         if(toMatchExt[2] < .01):
-            toMoveExt[2] = 1
-            toMatchExt[2] = 1
+            toMoveExt[2]=1
+            toMatchExt[2]=1
 
-        backScale = trimesh.transformations.scale_matrix(
+        backScale=trimesh.transformations.scale_matrix(
             1, [0, 0, 0])
         backScale[0, 0] = toMatchExt[0]/toMoveExt[0]
         if(backScale[0, 0] < .05):
@@ -232,7 +232,7 @@ def connectJointsBeta(parts):
         destination = np.average(toMatch, axis=0)
         origin = np.average(toMove, axis=0)
         parts[partIndices['back']].mesh.vertices -= origin
-        print("transformed ", label, " to match ", label2)
+        # print("transformed ", label, " to match ", label2)
         parts[partIndices['back']].mesh.apply_transform(backScale)
         parts[partIndices['back']].mesh.vertices += [origin[0],
                                                      destination[1], destination[2]]
@@ -340,7 +340,7 @@ def connectJointsBeta(parts):
                     part.mesh = trimesh.util.concatenate(
                         part.mesh, triangulation)
                 except:
-                    print('couldn\'nt triangulate joint')
+                    continue# print('couldn\'t triangulate joint')
     # attach joints
     bbpartmeshes = []
     for part in parts:
@@ -370,13 +370,15 @@ def connectJointsBeta(parts):
                 closest_point = trimesh.proximity.closest_point(
                     parts[partIndices[label]].mesh, [centroid])
                 # if(closest_point[1][0] < .2):
+                if(name == 'arm rest' and label == 'back' and len(jointCenters['back']['arm rest']) < 1):
+                    continue
                 closest_point = closest_point[0]
                 translation = closest_point[0]-centroid
                 dists = part.mesh.vertices-closest_point
                 dists = dists*dists
                 dists = np.sum(dists, axis=1, keepdims=True)
                 part.mesh.vertices += translation * \
-                    np.maximum(0, (1-(dists*5)))
+                    np.maximum(0, (1-(np.sqrt(dists))))
         # for v in part.mesh.vertices:
         #     v += translation/max(1.0, (vdistancesq(v, centroid)*500))
 
