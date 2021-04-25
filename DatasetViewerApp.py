@@ -185,5 +185,20 @@ if __name__ == "__main__":
         runProgram(datasetIndices)
         quit()
 
+    if '-setA' in tokens:
+        datasetIndices = [369, 175, 5540]
+        runProgram(datasetIndices)
+        quit()
+
+    if '-setB' in tokens:
+        datasetIndices = [2999, 2150, 3492, 4474, 2160]
+        runProgram(datasetIndices)
+        quit()
+
+    if '-setC' in tokens:
+        datasetIndices = [1919, 3366, 3521, 3204, 1131, 173, 3749, 2313, 5117, 1920]
+        runProgram(datasetIndices)
+        quit()
+
     runProgram(tokens)
 

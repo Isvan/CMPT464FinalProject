@@ -14,12 +14,45 @@ from Scorer import Scorer
 from MLStatics import *
 
 if __name__ == "__main__":
-    # take 10 random chairs and form collections
-    sourceChairCount = 100
+    tokens = sys.argv[1:]
+    if len(tokens) <= 0:
+        print('- Run with random dataset indices e.g. \"MixAndMatchApp.py -r 5\"')
+        print('- Run with defense sets e.g. \"MixAndMatchApp.py -setA (or setB, setC)\"')
+        print('- Specify how many chairs to generate and the pool size e.g. \"MixAndMatchApp.py -r 5 -g 10 -p 100\"')
+        quit()
+
+    chairsToGenerateCount = 10
+    if '-g' in tokens:
+        index = tokens.index('-g')
+        chairsToGenerateCount = int(tokens[index+1])
+
+    chairPoolCount = 200
+    if '-p' in tokens:
+        index = tokens.index('-p')
+        chairPoolCount = int(tokens[index+1])
+
     datasetIndices = []
-    for i in range(sourceChairCount):
-        randomIndex = int(random.randrange(1, 6201))
-        datasetIndices.append(str(randomIndex))
+    if '-r' in tokens:
+        index = tokens.index('-r')
+        randomAmount = int(tokens[index+1])
+        randomShuffledIndices = list(range(1, 6202))
+        random.shuffle(randomShuffledIndices)
+        datasetIndices = randomShuffledIndices[:randomAmount]
+
+    if '-setA' in tokens:
+        datasetIndices = [369, 175, 5540]
+
+    if '-setB' in tokens:
+        datasetIndices = [2999, 2150, 3492, 4474, 2160]
+
+    if '-setC' in tokens:
+        datasetIndices = [1919, 3366, 3521, 3204, 1131, 173, 3749, 2313, 5117, 1920]
+    
+    # Start
+    print('Running program for indices: '+str(datasetIndices))
+    print('# of chairs to generate: '+str(chairsToGenerateCount))
+    print('Size of the pool: '+str(chairPoolCount))
+
 
     models = []
     for index in datasetIndices:
@@ -29,10 +62,9 @@ if __name__ == "__main__":
         model.name = str(index)
         models.append(model)
 
-    # generate 100 new chairs
-    generatedChairCount = 200
+    # fill the chair pool
     newChairs = []
-    for i in progressbar(range(generatedChairCount), "Generating Chairs"):
+    for i in progressbar(range(chairPoolCount), "Generating Chairs"):
         newChair = mpv.generateChair(models)
         newChairs.append(newChair)
 
@@ -68,7 +100,7 @@ if __name__ == "__main__":
         chairsToDisplay.append(chair)
 
     # we would need only 10 top chairs
-    chairsToDisplay = chairsToDisplay[:10]
+    chairsToDisplay = chairsToDisplay[:chairsToGenerateCount]
 
     # export the chairs as .objs
     for i in range(len(chairsToDisplay)):
