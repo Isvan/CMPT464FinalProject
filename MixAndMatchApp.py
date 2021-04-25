@@ -47,15 +47,20 @@ if __name__ == "__main__":
 
     if '-setC' in tokens:
         datasetIndices = ['1919', '3366', '3521', '3204', '1131', '173', '3749', '2313', '5117', '1920']
+
+    # conver to str
+    inputIndices = []
+    for index in datasetIndices:
+        inputIndices.append(str(index))
     
     # Start
-    print('Running program for indices: '+str(datasetIndices))
+    print('Running program for indices: '+str(inputIndices))
     print('# of chairs to generate: '+str(chairsToGenerateCount))
     print('Size of the pool: '+str(chairPoolCount))
 
 
     models = []
-    for index in datasetIndices:
+    for index in inputIndices:
         partsTuples = dt.getDatasetObjParts(index)
         modelParts = dva.parseDatasetChairTuples(index, partsTuples)
         model = mpv.Model(modelParts)
