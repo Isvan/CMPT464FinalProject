@@ -96,7 +96,7 @@ def setViewerSceneMeshes(viewer, parts):
 def getCaptionForModel(model, index):
     captionText = '#'+str(index)+' - ' 
     if model.datasetIndex != None:
-        captionText+=str(model.datasetIndex)+'.mat '+str(model.datasetObjIndex)+'.obj'
+        captionText+=str(model.datasetIndex)+'.mat, '+str(model.datasetObjIndex)+'.obj'
     else:
         captionText+="generated"
 
