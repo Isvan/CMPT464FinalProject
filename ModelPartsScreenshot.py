@@ -77,6 +77,6 @@ def captureDepth(model, rotations, imageWidth=224, imageHeight=224, cameraZTrans
     result = []
     for rotation in rotations:
         result.append(renderSceneWithRotation(offscreenRenderer,
-                      scene, rotation, depthBegin, depthEnd))
+                                              scene, rotation, depthBegin, depthEnd))
 
     return result
