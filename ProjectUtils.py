@@ -157,7 +157,7 @@ def connectJointsBeta(parts):
             1, [0, 0, 0])
         legScale[0, 0] = toMatchExt[0]/toMoveExt[0]
         # legScale[1, 1] = toMatchExt[1]/toMoveExt[1]
-        legScale[2, 2] = toMatchExt[2]/toMoveExt[2]
+        legScale[2, 2] = min(2, toMatchExt[2]/toMoveExt[2])
         destination = np.average(toMatch, axis=0)
         origin = np.average(toMove, axis=0)
         parts[partIndices['leg']].mesh.vertices -= origin
@@ -179,7 +179,7 @@ def connectJointsBeta(parts):
             origin = jointCentroid(toMove)
         legScale = trimesh.transformations.scale_matrix(
             1, [0, 0, 0])
-        legScale[0, 0] = seatExtents[0]/legExtents[0]
+        legScale[0, 0] = min(2, seatExtents[0]/legExtents[0])
         # legScale[1, 1] = toMatchExt[1]/toMoveExt[1]
         legScale[2, 2] = seatExtents[2]/legExtents[2]
 
@@ -188,8 +188,8 @@ def connectJointsBeta(parts):
         parts[partIndices['leg']].mesh.vertices -= origin
         parts[partIndices['leg']].mesh.apply_transform(legScale)
 
-        # destination = [destination[0], origin[1] + seatBounds[0][1] -
-        #               legBounds[1][1], seatBounds[0][2]-parts[partIndices['leg']].mesh.bounds[0][2]]
+        destination = [destination[0], origin[1] + seatBounds[0][1] -
+                       legBounds[1][1], seatBounds[0][2]-parts[partIndices['leg']].mesh.bounds[0][2]]
         parts[partIndices['leg']].mesh.vertices += destination
         print("transformed ", label, " to match ",
               label2, "with default method")
@@ -313,6 +313,10 @@ def connectJointsBeta(parts):
         parts[partIndices['arm rest']].mesh.vertices += [armCenter[0],
                                                          seatBounds[0][1]-armBounds[0][1], armCenter[2]]
     # otherwise should scale arm rest so that minimum armrest y value is same as minimum seat y value
+    # MISSING
+    # make sure arm-rest is mostly above seat if no joints : defaults for arm?
+    # leg-arm/arm-leg Probably do leg->arm
+    #
 
     # attempt to fill holes
     for part in parts:
@@ -322,7 +326,7 @@ def connectJointsBeta(parts):
                 toTriangulate = np.array(part.mesh.vertices[indices])
                 # print('point 0')
                 # print(toTriangulate[0])
-                #np.append(toTriangulate, centroid)
+                # np.append(toTriangulate, centroid)
                 try:
                     triangulation = trimesh.PointCloud(
                         toTriangulate).convex_hull
@@ -364,30 +368,29 @@ def connectJointsBeta(parts):
                 # print(centroid)
                 closest_point = trimesh.proximity.closest_point(
                     parts[partIndices[label]].mesh, [centroid])
-                if(closest_point[1][0] < .2):
-                    closest_point = closest_point[0]
-                    translation = closest_point[0]-centroid
-                    dists = part.mesh.vertices-closest_point
-                    dists = dists*dists
-                    dists = np.sum(dists, axis=1, keepdims=True)
-                    part.mesh.vertices += translation * \
-                        np.maximum(0, (1-(dists)))
-                # for v in part.mesh.vertices:
-                #     v += translation/max(1.0, (vdistancesq(v, centroid)*500))
+                # if(closest_point[1][0] < .2):
+                closest_point = closest_point[0]
+                translation = closest_point[0]-centroid
+                dists = part.mesh.vertices-closest_point
+                dists = dists*dists
+                dists = np.sum(dists, axis=1, keepdims=True)
+                part.mesh.vertices += translation * \
+                    np.maximum(0, (1-(dists)))
+        # for v in part.mesh.vertices:
+        #     v += translation/max(1.0, (vdistancesq(v, centroid)*500))
 
         #     if(backlegOK or name != 'back' or label != 'leg')):
         #         closest_point=trimesh.proximity.closest_point(
         #             parts[partIndices[label]].mesh, part.mesh.vertices[indices])[0]
         #         part.mesh.vertices[indices]=closest_point
 
-            # arm-back and arm-seat
-            # close holes in arm/seat by using part centroid and joint centroid, and move the joint verts to the max dist in the main direction of that vector, for seats maybe just down
-            # if(len(jointCenters['back']['seat']) > 0 and len(jointCenters['seat']['back']) > 0):
+        # arm-back and arm-seat
+        # close holes in arm/seat by using part centroid and joint centroid, and move the joint verts to the max dist in the main direction of that vector, for seats maybe just down
+        # if(len(jointCenters['back']['seat']) > 0 and len(jointCenters['seat']['back']) > 0):
 
-            #                                             #[origin[0], destination[1], destination[2]]
+        #                                             #[origin[0], destination[1], destination[2]]
 
-            # elif(len(jointCenters['leg']['seat']) == len(jointCenters['seat']['leg']) and len(jointCenters['leg']['seat']) == 2):
-
+        # elif(len(jointCenters['leg']['seat']) == len(jointCenters['seat']['leg']) and len(jointCenters['leg']['seat']) == 2):
 
 
 def connectJoints(parts):

@@ -93,24 +93,27 @@ def setViewerSceneMeshes(viewer, parts):
     setSceneMeshes(viewer.scene, parts)
     viewer.render_lock.release()
 
-def getCaptionForModel(model, index):
-    captionText = '#'+str(index)+' - ' 
-    if model.datasetIndex != None:
-        captionText+=str(model.datasetIndex)+'.mat, '+str(model.datasetObjIndex)+'.obj'
-    else:
-        captionText+="generated"
 
-    caption = {'text': captionText, 
-    'location': pyrender.constants.TextAlign.TOP_CENTER,
-    'font_name': 'fonts/Arial.ttf',
-    'font_pt': 20,
-    'color': (0, 0, 0, 255),
-    'scale': 1
-    }
-    
+def getCaptionForModel(model, index):
+    captionText = '#'+str(index)+' - '
+    if model.datasetIndex != None:
+        captionText += str(model.datasetIndex)+'.mat, ' + \
+            str(model.datasetObjIndex)+'.obj'
+    else:
+        captionText += "generated"
+
+    caption = {'text': captionText,
+               'location': pyrender.constants.TextAlign.TOP_CENTER,
+               'font_name': 'fonts/Arial.ttf',
+               'font_pt': 20,
+               'color': (0, 0, 0, 255),
+               'scale': 1
+               }
+
     captionList = []
     captionList.append(caption)
     return captionList
+
 
 def setModelIndex(viewer, index):
     modelPartsViewer.viewerModelIndex = index
@@ -222,10 +225,10 @@ def generateChair(inputModels):
     resultParts = []
     for part in randomModel.parts:
         newPart = chairParts[part.label]
-        pUtils.scaleMeshAToB(newPart.mesh, part.mesh)
-        pUtils.translateMeshAToB(newPart.mesh, part.mesh)
+        #pUtils.scaleMeshAToB(newPart.mesh, part.mesh)
+        #pUtils.translateMeshAToB(newPart.mesh, part.mesh)
         resultParts.append(newPart)
-    pUtils.connectJoints(resultParts)
+    pUtils.connectJointsBeta(resultParts)
     return Model(resultParts)
 
 
@@ -412,8 +415,9 @@ def start():
 
     defaultModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
     defaultScene = pyrender.Scene()
-    defaultCaption = getCaptionForModel(defaultModel, modelPartsViewer.viewerModelIndex)
+    defaultCaption = getCaptionForModel(
+        defaultModel, modelPartsViewer.viewerModelIndex)
     setSceneMeshes(defaultScene, defaultModel.parts)
 
-    pyrender.Viewer(defaultScene, viewer_flags = {'caption': defaultCaption}, registered_keys={
+    pyrender.Viewer(defaultScene, viewer_flags={'caption': defaultCaption}, registered_keys={
                     'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChairViewer, 'x': takeScreenshot, 'y': takePositiveScreenShot, 'n': takeNegativeScreenShot, 'e': evalCurrentChair, 'o': exportCurrentChair}, use_raymond_lighting=True)
