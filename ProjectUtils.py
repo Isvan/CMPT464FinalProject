@@ -191,8 +191,7 @@ def connectJointsBeta(parts):
         destination = [destination[0], origin[1] + seatBounds[0][1] -
                        legBounds[1][1], seatBounds[0][2]-parts[partIndices['leg']].mesh.bounds[0][2]]
         parts[partIndices['leg']].mesh.vertices += destination
-        # print("transformed ", label, " to match ",
-              label2, "with default method")
+        # print("transformed ", label, " to match ", label2, "with default method")
     if(len(jointCenters['back']['seat']) > 0 and len(jointCenters['seat']['back']) > 0):
         # JOINING SEATS TO BACKS
         label='back'
