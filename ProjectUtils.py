@@ -289,6 +289,7 @@ def connectJointsBeta(parts):
         parts[partIndices['arm rest']].mesh.apply_transform(armScale)
         dest = [armCenter[0], np.average(toMatch, axis=0)[1], armCenter[2]]
         parts[partIndices['arm rest']].mesh.vertices += dest
+    # MISSING Default armrest movement?
     if(len(jointCenters['arm rest']['seat']) > 1 and len(jointCenters['seat']['arm rest']) > 1):
         label = 'arm rest'
         label2 = 'seat'
@@ -375,7 +376,7 @@ def connectJointsBeta(parts):
                 dists = dists*dists
                 dists = np.sum(dists, axis=1, keepdims=True)
                 part.mesh.vertices += translation * \
-                    np.maximum(0, (1-(dists)))
+                    np.maximum(0, (1-(dists*5)))
         # for v in part.mesh.vertices:
         #     v += translation/max(1.0, (vdistancesq(v, centroid)*500))
 
