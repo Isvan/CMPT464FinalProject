@@ -76,6 +76,18 @@ def vdistancesq(a, b):
         dsum = dsum+(a[i]-b[i])*(a[i]-b[i])
     return dsum
 
+def getDatasetObjIndex(datasetIndex):
+    json_data_path = 'dataset/compiled/'
+    dataset_path = 'dataset/Chair/'
+
+    with open(json_data_path+str(datasetIndex)+'.json') as jsonFile:
+        try:
+            obJson = json.load(jsonFile)
+        except:
+            print("error opening json file")
+
+    modelNum = str(obJson['obj'])
+    return modelNum
 
 def getDatasetObjParts(datasetIndex):
     json_data_path = 'dataset/compiled/'

@@ -60,6 +60,8 @@ if __name__ == "__main__":
         modelParts = dva.parseDatasetChairTuples(index, partsTuples)
         model = mpv.Model(modelParts)
         model.name = str(index)
+        model.datasetIndex = str(index)
+        model.datasetObjIndex = dt.getDatasetObjIndex(index)
         models.append(model)
 
     # fill the chair pool

@@ -130,6 +130,8 @@ def runProgram(datasetIndices):
         modelParts = parseDatasetChairTuples(index, partsTuples)
         model = mpv.Model(modelParts)
         model.name = str(index)  # for screenshotting convenience
+        model.datasetIndex = str(index)
+        model.datasetObjIndex = dt.getDatasetObjIndex(index)
         models.append(model)
 
     mpv.setInputModels(models)

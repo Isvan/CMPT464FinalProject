@@ -46,6 +46,8 @@ class Model:
     def __init__(self, parts):
         self.parts = copy.deepcopy(parts)
         self.name = "default"
+        self.datasetIndex = None
+        self.datasetObjIndex = None
 
     def getPartByLabel(self, label):
         for part in self.parts:
@@ -91,12 +93,31 @@ def setViewerSceneMeshes(viewer, parts):
     setSceneMeshes(viewer.scene, parts)
     viewer.render_lock.release()
 
+def getCaptionForModel(model, index):
+    captionText = '#'+str(index)+' - ' 
+    if model.datasetIndex != None:
+        captionText+=str(model.datasetIndex)+'.mat '+str(model.datasetObjIndex)+'.obj'
+    else:
+        captionText+="generated"
+
+    caption = {'text': captionText, 
+    'location': pyrender.constants.TextAlign.TOP_CENTER,
+    'font_name': 'fonts/Arial.ttf',
+    'font_pt': 20,
+    'color': (0, 0, 0, 255),
+    'scale': 1
+    }
+    
+    captionList = []
+    captionList.append(caption)
+    return captionList
 
 def setModelIndex(viewer, index):
     modelPartsViewer.viewerModelIndex = index
     modelPartsViewer.renderMode = 0
-    allModelParts = modelPartsViewer.models[index].parts
-    setViewerSceneMeshes(viewer, allModelParts)
+    model = modelPartsViewer.models[index]
+    viewer.viewer_flags['caption'] = getCaptionForModel(model, index)
+    setViewerSceneMeshes(viewer, model.parts)
 
 
 def setRenderModeIndex(viewer, model, renderModeIndex):
@@ -389,9 +410,10 @@ def start():
     modelPartsViewer.renderMode = 0
     modelPartsViewer.viewerModelIndex = 0
 
-    defaultModel = modelPartsViewer.models[0]
+    defaultModel = modelPartsViewer.models[modelPartsViewer.viewerModelIndex]
     defaultScene = pyrender.Scene()
+    defaultCaption = getCaptionForModel(defaultModel, modelPartsViewer.viewerModelIndex)
     setSceneMeshes(defaultScene, defaultModel.parts)
 
-    pyrender.Viewer(defaultScene, registered_keys={
+    pyrender.Viewer(defaultScene, viewer_flags = {'caption': defaultCaption}, registered_keys={
                     'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChairViewer, 'x': takeScreenshot, 'y': takePositiveScreenShot, 'n': takeNegativeScreenShot, 'e': evalCurrentChair, 'o': exportCurrentChair}, use_raymond_lighting=True)
