@@ -404,25 +404,29 @@ def connectJointsBeta(parts):
     # MISSING
     # make sure arm-rest is mostly above seat if no joints : defaults for arm?
     # leg-arm/arm-leg Probably do leg->arm
-    #
 
-    # attach joints
-# bbpartmeshes = []
-# for part in parts:
-#     bbpartmeshes.append(trimesh.convex.convex_hull(
-#         part.mesh, qhull_options='QbB Pp Qt'))
     partNameorder = ['back', 'leg', 'arm rest']
-    # print("start of thingy")
-    # if(len(jointCenters['arm rest']['leg']) > 0 and len(jointCenters['leg']['arm rest']) == 0):
-    #     for j in parts[partIndices['arm rest']].joints:
-    #         if j[0] == 'leg':
-    #             parts[partIndices['arm rest']].joints.remove(j)
-# backlegOK = True
+
     if(len(jointCenters['back']['leg']) > 0 and len(jointCenters['leg']['back']) == 0):
         backlegOK = False
-        # for j in parts[partIndices['back']].joints:
-        #     if j[0] == 'leg':
-        #         parts[partIndices['back']].joints.remove(j)
+    # attempt to fill holes
+    for part in parts:
+        for label, indices in part.joints:
+            if(part.label == 'leg' and label == 'seat' and len(jointCenters['leg'][label]) < 3):
+                continue
+
+            centroid = jointCentroid(part.mesh.vertices, indices)
+            toTriangulate = np.array(part.mesh.vertices[indices])
+            # print('point 0')
+            # print(toTriangulate[0])
+            # np.append(toTriangulate, centroid)
+            try:
+                triangulation = trimesh.PointCloud(
+                    toTriangulate).convex_hull
+                part.mesh = trimesh.util.concatenate(
+                    part.mesh, triangulation)
+            except:
+                continue
     # ALIGN joints with appropriate mesh
     for name in partNameorder:
         part = parts[partIndices[name]]
@@ -443,7 +447,7 @@ def connectJointsBeta(parts):
                 continue
             closest_point = closest_point[0]
             translation = closest_point[0]-centroid
-            if(name == 'leg' and label == 'arm rest' and partIndices['arm rest'] == -1):
+            if(name == 'leg' and label == 'arm rest' and len(jointCenters['arm rest']['leg']) < 1):
                 label = 'seat'
             if(name == 'leg' and label == 'seat'):
 
@@ -472,39 +476,6 @@ def connectJointsBeta(parts):
                 dists = np.sum(dists, axis=1, keepdims=True)
                 part.mesh.vertices += translation * \
                     np.maximum(0, (1-np.sqrt(dists)))
-        # attempt to fill holes
-    for part in parts:
-        for label, indices in part.joints:
-            if(part.label == 'leg' and label == 'seat' and len(jointCenters['leg'][label]) < 3):
-                continue
-
-            centroid = jointCentroid(part.mesh.vertices, indices)
-            toTriangulate = np.array(part.mesh.vertices[indices])
-            # print('point 0')
-            # print(toTriangulate[0])
-            # np.append(toTriangulate, centroid)
-            try:
-                triangulation = trimesh.PointCloud(
-                    toTriangulate).convex_hull
-                part.mesh = trimesh.util.concatenate(
-                    part.mesh, triangulation)
-            except:
-                continue  # print('couldn\'t triangulate joint')
-        # for v in part.mesh.vertices:
-        #     v += translation/max(1.0, (vdistancesq(v, centroid)*500))
-
-        #     if(backlegOK or name != 'back' or label != 'leg')):
-        #         closest_point=trimesh.proximity.closest_point(
-        #             parts[partIndices[label]].mesh, part.mesh.vertices[indices])[0]
-        #         part.mesh.vertices[indices]=closest_point
-
-        # arm-back and arm-seat
-        # close holes in arm/seat by using part centroid and joint centroid, and move the joint verts to the max dist in the main direction of that vector, for seats maybe just down
-        # if(len(jointCenters['back']['seat']) > 0 and len(jointCenters['seat']['back']) > 0):
-
-        #                                             #[origin[0], destination[1], destination[2]]
-
-        # elif(len(jointCenters['leg']['seat']) == len(jointCenters['seat']['leg']) and len(jointCenters['leg']['seat']) == 2):
 
 
 def connectJointsIcp(parts):
