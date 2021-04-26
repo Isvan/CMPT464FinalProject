@@ -47,18 +47,18 @@ if __name__ == "__main__":
         datasetIndices = ['2999', '2150', '3492', '4474', '2160']
 
     if '-setC' in tokens:
-        datasetIndices = ['1919', '3366', '3521', '3204', '1131', '173', '3749', '2313', '5117', '1920']
+        datasetIndices = ['1919', '3366', '3521', '3204',
+                          '1131', '173', '3749', '2313', '5117', '1920']
 
     # conver to str
     inputIndices = []
     for index in datasetIndices:
         inputIndices.append(str(index))
-    
+
     # Start
     print('Running program for indices: '+str(inputIndices))
     print('# of chairs to generate: '+str(chairsToGenerateCount))
     print('Size of the pool: '+str(chairPoolCount))
-
 
     models = []
     for index in inputIndices:
@@ -91,9 +91,9 @@ if __name__ == "__main__":
 
     # screenshot every new chair
     rotations = [
-        (np.pi/2, 0, 0),  # top
-        (0, np.pi/2, 0),  # right
         (0, 0, 0),  # front
+        (0, np.pi/2, 0),  # right
+        (np.pi/2, 0, 0),  # top
         # (0, np.pi, 0),  # back
         # (0, -np.pi/2, 0),  # left
         # (-np.pi/2, 0, 0)  # bottom

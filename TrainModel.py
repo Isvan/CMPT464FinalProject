@@ -102,6 +102,8 @@ def runSingleTripleBranchNN():
     imagesTop, imagesFront, imagesSide, topLabel, frontLabel, sideLabel = chairsDataset.load(
         img_height)
 
+    model.save(os.path.join(checkpointFilepath, "h5Model.h5"))
+
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=os.path.join(
             checkpointFilepath, "tripleView", "checkpoint"+str(img_height)),
@@ -117,7 +119,8 @@ def runSingleTripleBranchNN():
         validation_split=0.2,
         epochs=training_epochs,
         batch_size=batch_size,
-        callbacks=[model_checkpoint_callback]
+        callbacks=[model_checkpoint_callback,
+                   nnModels.getLearningRateSchedule()]
     )
 
     print("Done training Triple View ")
