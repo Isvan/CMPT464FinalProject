@@ -3,7 +3,8 @@
 # Technical details
 
 ## How to install
-- Start a Virtual environment, you can run `python -m venv <path>`. For example, to create a venv in current directory, run `python -m venv .`
+- Start a Virtual environment, you can run `python -m venv <path>`. For example, to create a venv in current directory, 
+run `python -m venv .`
 - Install all dependencies using `pip install -r requirements.txt`. We are using python 3.8 for this project.
 
 ## Running
