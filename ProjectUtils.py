@@ -187,8 +187,14 @@ def connectJointsTheta(parts):
             part.mesh.vertices += translation * \
                 np.maximum(0, (1-(dists)))
 
+# no BB scaling beforehand
+
+# initial rough implementation, unpolished - consider shooting ray up from chair to connect with seat
+# instead of bounds based or closest point based translation
+
 
 def connectJointsBeta(parts):
+    #
     partIndices = {'back': -1, 'seat': -1, 'leg': -1, 'arm rest': -1}
     jointCenters = {'back': {'back': [], 'seat': [], 'leg': [], 'arm rest': []}, 'seat': {'back': [], 'seat': [], 'leg': [], 'arm rest': [
     ]}, 'leg': {'back': [], 'seat': [], 'leg': [], 'arm rest': []}, 'arm rest': {'back': [], 'seat': [], 'leg': [], 'arm rest': []}}
@@ -478,6 +484,9 @@ def connectJointsBeta(parts):
                 part.mesh.vertices += translation * \
                     np.maximum(0, (1-np.sqrt(dists)))
 
+# abandoned, demonstration of difficulty getting good results
+# BB scaling beforehand is needed
+
 
 def connectJointsIcp(parts):
     # parts = array of parts
@@ -522,6 +531,8 @@ def connectJointsIcp(parts):
         minseaty = min(seatBounds[0][1], seatBounds[1][1])
         trans = [0, minseaty-maxlegy, 0]
         parts[partIndices['leg']].mesh.vertices += trans
+
+# BB scaling beforehand is needed
 
 
 def connectJoints(parts):
