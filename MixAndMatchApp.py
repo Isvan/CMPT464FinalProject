@@ -78,16 +78,19 @@ if __name__ == "__main__":
     tryGenerateCount = 0
     bar = pbar.ProgressBar(max_value = chairPoolCount)
     while len(newChairs) < chairPoolCount:
-        newChair = mpv.generateChair(models)
+        newChair = mpv.generateChairFast(models)
         if mpv.modelListContains(newChairs, newChair):
             tryGenerateCount+=1
             if tryGenerateCount >= tryGenerateTimes:
                 break
             continue
         
+        mpv.weldChairParts(newChair)
         tryGenerateCount = 0
         newChairs.append(newChair)
         bar.update(len(newChairs))
+
+    bar.finish()
 
     # screenshot every new chair
     rotations = [
@@ -100,7 +103,7 @@ if __name__ == "__main__":
     ]
 
     depthScreenshots = []
-    for generatedChair in newChairs:
+    for generatedChair in progressbar(newChairs, "Making Screenshots"):
         perspectives = mps.captureDepth(
             generatedChair, rotations, imageWidth=224, imageHeight=224)
         depthScreenshots.append((generatedChair, perspectives))
@@ -124,7 +127,7 @@ if __name__ == "__main__":
     chairsToDisplay = chairsToDisplay[:chairsToGenerateCount]
 
     # export the chairs as .objs
-    for i in range(len(chairsToDisplay)):
+    for i in progressbar(range(len(chairsToDisplay)), "Exporting generated chairs as .obj"):
         fileName = str(i) + '.obj'
         mpv.exportModelAsObj(chairsToDisplay[i], fileName)
 
