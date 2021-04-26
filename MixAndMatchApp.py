@@ -114,6 +114,7 @@ if __name__ == "__main__":
     scoredChairs = []
     for generatedChair, perspectives in progressbar(depthScreenshots, "Evaluating Chairs"):
         score = s.score(perspectives)
+        generatedChair.cachedScore = score
         scoredChairs.append((generatedChair, score))
 
     # sort models depending on the score, from bigger to smaller
