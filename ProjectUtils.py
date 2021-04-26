@@ -212,6 +212,8 @@ def connectJointsBeta(parts):
     labels = ['back', 'seat', 'leg', 'arm rest']
     labels2 = ['back', 'seat', 'leg', 'arm rest']
     # print(jointCenters)
+
+    # ALIGN PIECES ON CASE BY CASE BASIS either using part-part joints or defaulting to some bounding box scaling
     # Align leg with seat
     # try to align leg joints with seat joints
     if(len(jointCenters['leg']['seat']) == len(jointCenters['seat']['leg']) and len(jointCenters['leg']['seat']) > 2):
@@ -456,7 +458,9 @@ def connectJointsBeta(parts):
             closest_point = closest_point[0]
             translation = closest_point[0]-centroid
             if(name == 'leg' and label == 'arm rest' and len(jointCenters['arm rest']['leg']) < 1):
+                # if no arms for leg to connect to, try to connect it with the seat instead
                 label = 'seat'
+            # attempt to fix floating legs by making sure they are translated to contact the seat in more cases
             if(name == 'leg' and label == 'seat'):
 
                 if(len(jointCenters['leg']['seat']) == 1):
