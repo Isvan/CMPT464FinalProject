@@ -407,10 +407,10 @@ def connectJointsBeta(parts):
     #
 
     # attach joints
-    bbpartmeshes = []
-    for part in parts:
-        bbpartmeshes.append(trimesh.convex.convex_hull(
-            part.mesh, qhull_options='QbB Pp Qt'))
+# bbpartmeshes = []
+# for part in parts:
+#     bbpartmeshes.append(trimesh.convex.convex_hull(
+#         part.mesh, qhull_options='QbB Pp Qt'))
     partNameorder = ['back', 'leg', 'arm rest']
     # print("start of thingy")
     # if(len(jointCenters['arm rest']['leg']) > 0 and len(jointCenters['leg']['arm rest']) == 0):
@@ -443,11 +443,31 @@ def connectJointsBeta(parts):
                 continue
             closest_point = closest_point[0]
             translation = closest_point[0]-centroid
-            dists = part.mesh.vertices-closest_point
-            dists = dists*dists
-            dists = np.sum(dists, axis=1, keepdims=True)
-            part.mesh.vertices += translation * \
-                np.maximum(0, (1-np.sqrt(dists)))
+            if(name == 'leg' and label == 'seat'):
+                if(len(jointCenters['leg']['seat']) == 1):
+                    translation[0] = 0
+                dists = part.mesh.vertices-closest_point
+                for d in dists:
+                    d[1] = 0
+                dists = dists*dists
+                dists = np.sum(dists, axis=1, keepdims=True)
+                part.mesh.vertices += translation * \
+                    np.maximum(0, (1-np.sqrt(dists)))
+                #part.mesh.vertices[indices] += translation
+                legcp = trimesh.proximity.closest_point(
+                    parts[partIndices[label]].mesh, part.mesh.vertices[indices])
+                if(len(jointCenters['leg']['seat']) == 1):
+                    part.mesh.vertices[indices] = legcp[0]
+                else:
+                    for iter, v in enumerate(part.mesh.vertices[indices]):
+                        if(legcp[1][iter] < 0.03):
+                            v[1] = legcp[0][iter][1]
+            else:
+                dists = part.mesh.vertices-closest_point
+                dists = dists*dists
+                dists = np.sum(dists, axis=1, keepdims=True)
+                part.mesh.vertices += translation * \
+                    np.maximum(0, (1-np.sqrt(dists)))
         # attempt to fill holes
     for part in parts:
         for label, indices in part.joints:
