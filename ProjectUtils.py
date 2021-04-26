@@ -142,6 +142,23 @@ def connectJointsTheta(parts):
             # if(part.label == 'leg' or label == 'leg'):
             centroid = jointCentroid(part.mesh.vertices, indices)
             jointCenters[part.label][label].append(centroid)
+    # fill holes
+    for part in parts:
+        for label, indices in part.joints:
+            if(part.label != 'leg'):
+                if(len(indices) > 4):
+                    centroid = jointCentroid(part.mesh.vertices, indices)
+                    toTriangulate = np.array(part.mesh.vertices[indices])
+                    # print('point 0')
+                    # print(toTriangulate[0])
+                    # np.append(toTriangulate, centroid)
+                    try:
+                        triangulation = trimesh.PointCloud(
+                            toTriangulate).convex_hull
+                        part.mesh = trimesh.util.concatenate(
+                            part.mesh, triangulation)
+                    except:
+                        continue
     partNameorder = ['back', 'leg', 'arm rest']
     for name in partNameorder:
         part = parts[partIndices[name]]
@@ -169,22 +186,6 @@ def connectJointsTheta(parts):
             dists = np.sum(dists, axis=1, keepdims=True)
             part.mesh.vertices += translation * \
                 np.maximum(0, (1-(dists)))
-    for part in parts:
-        for label, indices in part.joints:
-            if(part.label != 'leg'):
-                if(len(indices) > 4):
-                    centroid = jointCentroid(part.mesh.vertices, indices)
-                    toTriangulate = np.array(part.mesh.vertices[indices])
-                    # print('point 0')
-                    # print(toTriangulate[0])
-                    # np.append(toTriangulate, centroid)
-                    try:
-                        triangulation = trimesh.PointCloud(
-                            toTriangulate).convex_hull
-                        part.mesh = trimesh.util.concatenate(
-                            part.mesh, triangulation)
-                    except:
-                        continue
 
 
 def connectJointsBeta(parts):
@@ -468,7 +469,7 @@ def connectJointsBeta(parts):
                     part.mesh.vertices[indices] = legcp[0]
                 else:
                     for iter, v in enumerate(part.mesh.vertices[indices]):
-                        if(legcp[1][iter] < 0.03):
+                        if(legcp[1][iter] < 0.1):
                             v[1] = legcp[0][iter][1]
             else:
                 dists = part.mesh.vertices-closest_point
