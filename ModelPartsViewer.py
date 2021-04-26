@@ -194,11 +194,12 @@ def removeFromModelListByName(models, name):
             models.remove(model)
             break
 
+
 def modelListContains(models, modelToCompare):
     for model in models:
         if model.getIdentifier() == modelToCompare.getIdentifier():
             return True
-    
+
     return False
 
 
@@ -249,6 +250,7 @@ def generateChair(inputModels):
     generatedChair = generateChairFast(inputModels)
     weldChairParts(generatedChair)
     return generatedChair
+
 
 def weldChairParts(chair):
     pUtils.connectJointsBeta(chair.parts)
@@ -441,5 +443,18 @@ def start():
         defaultModel, modelPartsViewer.viewerModelIndex)
     setSceneMeshes(defaultScene, defaultModel.parts)
 
-    pyrender.Viewer(defaultScene, viewer_flags={'caption': defaultCaption}, registered_keys={
-                    'd': viewNextModel, 'a': viewPrevModel, 's': viewPrevPart, 'w': viewNextPart, 'g': generateChairViewer, 'x': takeScreenshot, 'y': takePositiveScreenShot, 'n': takeNegativeScreenShot, 'e': evalCurrentChair, 'o': exportCurrentChair}, use_raymond_lighting=True)
+    pyrender.Viewer(
+        defaultScene,
+        viewer_flags={'caption': defaultCaption},
+        registered_keys={
+            'd': viewNextModel,
+            'a': viewPrevModel,
+            's': viewPrevPart,
+            'w': viewNextPart,
+            'g': generateChairViewer,
+            'x': takeScreenshot,
+            'y': takePositiveScreenShot,
+            'n': takeNegativeScreenShot,
+            'e': evalCurrentChair,
+            'o': exportCurrentChair},
+        use_raymond_lighting=True)
