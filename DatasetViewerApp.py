@@ -64,7 +64,7 @@ def parseDatasetChairTuples(modelIndex, partsTuples):
             continue
 
         # Add model part
-        part = mpv.Part(mesh=partMesh, label=partLabel, joints=pjoints)
+        part = mpv.Part(mesh=partMesh, label=partLabel, joints=pjoints, hostDatasetIndex = str(modelIndex))
         modelParts.append(part)
 
     # now make a pass on non grouped
@@ -76,7 +76,7 @@ def parseDatasetChairTuples(modelIndex, partsTuples):
         # Add it to .groupedParts array if the grouped version exists
         for modelPart in modelParts:
             if modelPart.label == partLabel:
-                sidePart = mpv.Part(mesh=partMesh, side=partSide)
+                sidePart = mpv.Part(mesh=partMesh, side=partSide, hostDatasetIndex = str(modelIndex))
                 modelPart.groupedParts.append(sidePart)
                 break
 

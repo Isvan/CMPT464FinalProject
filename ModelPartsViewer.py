@@ -12,8 +12,9 @@ import trimesh
 
 
 class Part:
-    def __init__(self, mesh, label=None, side=None, joints=None):
+    def __init__(self, mesh, hostDatasetIndex, label=None, side=None, joints=None):
         self.mesh = copy.deepcopy(mesh)
+        self.hostDatasetIndex = copy.deepcopy(hostDatasetIndex)
         if label != None:
             self.label = label
 
@@ -55,6 +56,13 @@ class Model:
                 return copy.deepcopy(part)
 
         return None
+
+    # identifier only specifies the parts but not the original model the parts are based on
+    def getIdentifier(self):
+        identifier = ''
+        for part in self.parts:
+            identifier += part.hostDatasetIndex + ' '
+        return identifier
 
 
 class ModelPartsViewer:
@@ -185,6 +193,13 @@ def removeFromModelListByName(models, name):
         if model.name == name:
             models.remove(model)
             break
+
+def modelListContains(models, modelToCompare):
+    for model in models:
+        if model.getIdentifier() == modelToCompare.getIdentifier():
+            return True
+    
+    return False
 
 
 # API END

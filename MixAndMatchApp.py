@@ -1,3 +1,4 @@
+import progressbar as pbar #pip3 install progressbar2
 import numpy as np
 import os
 import random
@@ -69,11 +70,24 @@ if __name__ == "__main__":
         model.datasetObjIndex = dt.getDatasetObjIndex(index)
         models.append(model)
 
-    # fill the chair pool
+    # fill the chair pool, do not repeat the chairs
     newChairs = []
-    for i in progressbar(range(chairPoolCount), "Generating Chairs"):
+
+    print("Generating Chairs...")
+    tryGenerateTimes = 100
+    tryGenerateCount = 0
+    bar = pbar.ProgressBar(max_value = chairPoolCount)
+    while len(newChairs) < chairPoolCount:
         newChair = mpv.generateChair(models)
+        if mpv.modelListContains(newChairs, newChair):
+            tryGenerateCount+=1
+            if tryGenerateCount >= tryGenerateTimes:
+                break
+            continue
+        
+        tryGenerateCount = 0
         newChairs.append(newChair)
+        bar.update(len(newChairs))
 
     # screenshot every new chair
     rotations = [
