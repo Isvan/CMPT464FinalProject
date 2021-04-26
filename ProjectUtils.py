@@ -443,9 +443,13 @@ def connectJointsBeta(parts):
                 continue
             closest_point = closest_point[0]
             translation = closest_point[0]-centroid
+            if(name == 'leg' and label == 'arm rest' and partIndices['arm rest'] == -1):
+                label = 'seat'
             if(name == 'leg' and label == 'seat'):
+
                 if(len(jointCenters['leg']['seat']) == 1):
                     translation[0] = 0
+
                 dists = part.mesh.vertices-closest_point
                 for d in dists:
                     d[1] = 0
