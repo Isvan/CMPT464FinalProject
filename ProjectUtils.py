@@ -191,6 +191,7 @@ def connectJointsTheta(parts):
 
 # initial rough implementation, unpolished - consider shooting ray up from chair to connect with seat
 # instead of bounds based or closest point based translation
+# also instead of cases should generalize the connections
 
 
 def connectJointsBeta(parts):
