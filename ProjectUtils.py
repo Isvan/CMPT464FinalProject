@@ -128,6 +128,9 @@ def icpalign(new, old):
         new, old, samples=500, scale=True, icp_first=10, icp_final=50)[0]
     new.apply_transform(trans)
 
+# pure hole filling and joint transforms
+# need to scale+translate meshes to try align them first
+
 
 def connectJointsTheta(parts):
     partIndices = {'back': -1, 'seat': -1, 'leg': -1, 'arm rest': -1}
@@ -538,6 +541,7 @@ def connectJointsIcp(parts):
         parts[partIndices['leg']].mesh.vertices += trans
 
 # BB scaling beforehand is needed
+# tries to move all vertices of mesh based on the joints so they contact the appropriate meshes
 
 
 def connectJoints(parts):
