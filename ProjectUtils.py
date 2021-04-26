@@ -29,7 +29,7 @@ def scaleMeshAToB(meshA, meshB):
     for pos in meshA.vertices:
         pos -= centera
         pos[0] *= scale[0]
-        pos[1] *= scale[1]
+        pos[1] *= 1  # scale[1]
         pos[2] *= scale[2]
         pos += centera
     return scale
@@ -223,8 +223,7 @@ def connectJointsBeta(parts):
         parts[partIndices['leg']].mesh.vertices -= origin
         # print("transformed ", label, " to match ", label2)
         parts[partIndices['leg']].mesh.apply_transform(legScale)
-        parts[partIndices['leg']].mesh.vertices += [parts[partIndices['seat']
-                                                          ].mesh.centroid[0], destination[1], destination[2]]
+        parts[partIndices['leg']].mesh.vertices += destination
     # default to aligning leg bounding box with seat bounding box
     # while trying to keep the leg joints near the seat mesh
     else:
@@ -246,8 +245,8 @@ def connectJointsBeta(parts):
         legScale[0, 0] = min(
             seatExtents[0]/(legBounds[1][0]-legBounds[0][0]), seatExtents[0]/legExtents[0])
         # legScale[1, 1] = toMatchExt[1]/toMoveExt[1]
-        legScale[2, 2] = max(legScale[0, 0], min(
-            seatExtents[2]/(legBounds[1][2]-legBounds[0][2]), seatExtents[2]/legExtents[2]))
+        legScale[2, 2] = min(
+            seatExtents[2]/(legBounds[1][2]-legBounds[0][2]), seatExtents[2]/legExtents[2])
 
         destination = parts[partIndices['seat']].mesh.centroid
 
@@ -259,7 +258,6 @@ def connectJointsBeta(parts):
         if(len(jointCenters['leg']['seat']) > 2 and toMoveExt[1] < .1):
             destination = origin
         parts[partIndices['leg']].mesh.vertices += destination
-
         # print("transformed ", label, " to match ", label2, "with default method")
     # Align back with seat
     # try to align back joints with seat joints
@@ -308,6 +306,8 @@ def connectJointsBeta(parts):
         parts[partIndices['back']].mesh.vertices += [origin[0],
                                                      destination[1], destination[2]]
 
+        # parts[partIndices['back']].mesh.vertices += [0, (parts[partIndices['seat']
+        #                                                       ].mesh.bounds[0][1]-parts[partIndices['back']].mesh.bounds[0][1])/2, 0]
         for v in parts[partIndices['back']].mesh.vertices:
             # v[0] = min(v[0], seatBounds[1][0]+.1)
             # v[0] = max(v[0], seatBounds[0][0]-.1)
@@ -355,29 +355,6 @@ def connectJointsBeta(parts):
             for v in parts[partIndices['back']].mesh.vertices[j]:
                 v[1] = min(v[1], parts[partIndices['seat']].mesh.bounds[1][1])
     # align arm rest with back if matching joints
-    if(len(jointCenters['arm rest']['seat']) > 1):
-        label = 'arm rest'
-        label2 = 'seat'
-        toMove = jointCenters[label][label2]
-        toMoveExt = jointExtents(toMove)
-        seatext = parts[partIndices['back']].mesh.bounds[1] - \
-            parts[partIndices['back']].mesh.bounds[0]
-        armScale = trimesh.transformations.scale_matrix(
-            1, [0, 0, 0])
-        armScale[0, 0] = (seatext[0]*0.9)/toMoveExt[0]
-        armBounds = parts[partIndices['arm rest']].mesh.bounds
-        seatBounds = parts[partIndices['seat']].mesh.bounds
-        armScale[1, 1] = (seatBounds[0][1]-armBounds[1][1]) / \
-            (armBounds[0][1]-armBounds[1][1])
-        armScale[2, 2] = (seatBounds[1][2]-seatBounds[0][2]) / \
-            (armBounds[1][2]-armBounds[0][2])
-        armCenter = parts[partIndices['arm rest']].mesh.centroid
-        parts[partIndices['arm rest']].mesh.vertices -= armCenter
-        parts[partIndices['arm rest']].mesh.apply_transform(armScale)
-        armBounds = parts[partIndices['arm rest']].mesh.bounds
-        seatBounds = parts[partIndices['seat']].mesh.bounds
-        parts[partIndices['arm rest']].mesh.vertices += [parts[partIndices['seat']].mesh.centroid[0],
-                                                         seatBounds[0][1]-armBounds[0][1], armCenter[2]]
     if(len(jointCenters['arm rest']['back']) > 1 and len(jointCenters['back']['arm rest']) > 1):
         label = 'arm rest'
         label2 = 'back'
@@ -397,40 +374,32 @@ def connectJointsBeta(parts):
     # MISSING Default armrest movement?
     # match arm rest with seat
     # make sure arm rest is on sides of seat mesh
-
-    elif(len(jointCenters['arm rest']['leg']) > 1 and len(jointCenters['leg']['arm rest']) < 1 and (len(jointCenters['arm rest']['back']) == 0 or len(jointCenters['back']['arm rest']) == 0)):
-        toMove = jointCenters['arm rest']['leg']
+    if(len(jointCenters['arm rest']['seat']) > 1 and len(jointCenters['seat']['arm rest']) > 1):
+        label = 'arm rest'
+        label2 = 'seat'
+        toMove = jointCenters[label][label2]
         toMoveExt = jointExtents(toMove)
-        toMatchExt = parts[partIndices['back']].mesh.bounds[1] - \
-            parts[partIndices['back']].mesh.bounds[0]
-        centroidx = parts[partIndices['back']].mesh.centroid[0]
-        seatwidth = (parts[partIndices['seat']].mesh.bounds[1][0] -
-                     parts[partIndices['seat']].mesh.bounds[0][0])
-        if(seatwidth > toMatchExt[0]):
-            toMatchExt[0] = seatwidth
-            centroidx = parts[partIndices['seat']].mesh.centroid[0]
+        toMatch = jointCenters[label2][label]
+        toMatchExt = jointExtents(toMatch)
         armScale = trimesh.transformations.scale_matrix(
             1, [0, 0, 0])
         armScale[0, 0] = toMatchExt[0]/toMoveExt[0]
+        armBounds = parts[partIndices['arm rest']].mesh.bounds
+        seatBounds = parts[partIndices['seat']].mesh.bounds
+        armScale[1, 1] = (seatBounds[0][1]-armBounds[1][1]) / \
+            (armBounds[0][1]-armBounds[1][1])
+        armScale[2, 2] = (seatBounds[1][2]-seatBounds[0][2]) / \
+            (armBounds[1][2]-armBounds[0][2])
         armCenter = parts[partIndices['arm rest']].mesh.centroid
         parts[partIndices['arm rest']].mesh.vertices -= armCenter
         parts[partIndices['arm rest']].mesh.apply_transform(armScale)
-        parts[partIndices['arm rest']].mesh.vertices += [centroidx,
-                                                         armCenter[1], armCenter[2]]
-    if(len(jointCenters['arm rest']['leg']) > 0 and len(jointCenters['leg']['arm rest']) < 1 and len(jointCenters['arm rest']['seat']) < len(jointCenters['arm rest']['leg'])):
-        jointCenters['arm rest']['seat'] = jointCenters['arm rest']['leg']
-    if(len(jointCenters['leg']['arm rest']) > 0 and len(jointCenters['arm rest']['leg']) < 1 and len(jointCenters['leg']['back']) == 0):
-        jointCenters['leg']['seat'] = jointCenters['leg']['arm rest']
-
-    if(len(jointCenters['back']['seat']) == 0):
-        if(len(jointCenters['back']['arm rest']) > 0 and len(jointCenters['arm rest']['back']) < 1):
-            jointCenters['back']['seat'] = jointCenters['back']['arm rest']
-        if(len(jointCenters['back']['leg']) > 0 and len(jointCenters['leg']['back']) < 1):
-            jointCenters['back']['seat'] = jointCenters['back']['leg']
-        parts[partIndices['back']].mesh.vertices += [0, (parts[partIndices['seat']
-                                                               ].mesh.bounds[1][1]+parts[partIndices['seat']
-                                                                                         ].mesh.bounds[0][1])/2-parts[partIndices['back']].mesh.bounds[0][1], 0]
-
+        armBounds = parts[partIndices['arm rest']].mesh.bounds
+        seatBounds = parts[partIndices['seat']].mesh.bounds
+        parts[partIndices['arm rest']].mesh.vertices += [armCenter[0],
+                                                         seatBounds[0][1]-armBounds[0][1], armCenter[2]]
+    if(len(jointCenters['back']['seat']) == 0 and partIndices['arm rest'] == -1):
+        parts[partIndices['back']].mesh.vertices += [0, parts[partIndices['seat']
+                                                              ].mesh.bounds[1][1]-parts[partIndices['back']].mesh.bounds[0][1], 0]
     # otherwise should scale arm rest so that minimum armrest y value is same as minimum seat y value
     # MISSING
     # make sure arm-rest is mostly above seat if no joints : defaults for arm?
@@ -438,67 +407,80 @@ def connectJointsBeta(parts):
     #
 
     # attach joints
-
+    bbpartmeshes = []
+    for part in parts:
+        bbpartmeshes.append(trimesh.convex.convex_hull(
+            part.mesh, qhull_options='QbB Pp Qt'))
     partNameorder = ['back', 'leg', 'arm rest']
+    # print("start of thingy")
+    # if(len(jointCenters['arm rest']['leg']) > 0 and len(jointCenters['leg']['arm rest']) == 0):
+    #     for j in parts[partIndices['arm rest']].joints:
+    #         if j[0] == 'leg':
+    #             parts[partIndices['arm rest']].joints.remove(j)
+# backlegOK = True
+    if(len(jointCenters['back']['leg']) > 0 and len(jointCenters['leg']['back']) == 0):
+        backlegOK = False
+        # for j in parts[partIndices['back']].joints:
+        #     if j[0] == 'leg':
+        #         parts[partIndices['back']].joints.remove(j)
+    # ALIGN joints with appropriate mesh
     for name in partNameorder:
         part = parts[partIndices[name]]
         translation = [0, 0, 0]
+        # print(part.joints)
         for label, indices in part.joints:
             if(name == 'back' and label != 'seat'):
                 continue
-            if(name == 'leg' and label == 'arm rest' and partIndices['arm rest'] == -1):
-                label = 'seat'
+            if(name == 'leg' and label == 'seat' and len(jointCenters['leg']['seat']) < 2):
+                continue
             centroid = jointCentroid(part.mesh.vertices, indices)
+            # print(part.label, ' : ', label)
+            # print(centroid)
             closest_point = trimesh.proximity.closest_point(
                 parts[partIndices[label]].mesh, [centroid])
             cpdist = closest_point[1][0]
-            if(name == 'arm rest' and label != 'seat' and label != 'back' and cpdist > 0.25):
+            if(name == 'arm rest' and label != 'seat' and cpdist > 0.25):
                 continue
             closest_point = closest_point[0]
             translation = closest_point[0]-centroid
-            if(name == 'leg' and label == 'seat'):
-                if(len(jointCenters['leg']['seat']) == 1):
-                    translation[0] = 0
-                dists = part.mesh.vertices-closest_point
-                for d in dists:
-                    d[1] = 0
-                dists = dists*dists
-                dists = np.sum(dists, axis=1, keepdims=True)
-                part.mesh.vertices += translation * \
-                    np.maximum(0, (1-np.sqrt(dists)))
-                #part.mesh.vertices[indices] += translation
-                legcp = trimesh.proximity.closest_point(
-                    parts[partIndices[label]].mesh, part.mesh.vertices[indices])
-                if(len(jointCenters['leg']['seat']) == 1):
-                    part.mesh.vertices[indices] = legcp[0]
-                else:
-                    for iter, v in enumerate(part.mesh.vertices[indices]):
-                        if(legcp[1][iter] < 0.025):
-                            v[1] = legcp[0][iter][1]
-
-            else:
-                dists = part.mesh.vertices-closest_point
-                dists = dists*dists
-                dists = np.sum(dists, axis=1, keepdims=True)
-                part.mesh.vertices += translation * \
-                    np.maximum(0, (1-np.sqrt(dists)/2))
-
+            dists = part.mesh.vertices-closest_point
+            dists = dists*dists
+            dists = np.sum(dists, axis=1, keepdims=True)
+            part.mesh.vertices += translation * \
+                np.maximum(0, (1-np.sqrt(dists)))
         # attempt to fill holes
-    if(True):
-        for part in parts:
-            for label, indices in part.joints:
-                if(part.label == 'leg' and label == 'seat' and len(jointCenters['leg'][label]) < 3):
-                    continue
+    for part in parts:
+        for label, indices in part.joints:
+            if(part.label == 'leg' and label == 'seat' and len(jointCenters['leg'][label]) < 3):
+                continue
 
-                centroid = jointCentroid(part.mesh.vertices, indices)
-                toTriangulate = np.array(part.mesh.vertices[indices])
-                try:
-                    triangulation = trimesh.PointCloud(
-                        toTriangulate).convex_hull
-                    part.mesh = trimesh.util.concatenate(
-                        part.mesh, triangulation)
-                except:
-                    continue
+            centroid = jointCentroid(part.mesh.vertices, indices)
+            toTriangulate = np.array(part.mesh.vertices[indices])
+            # print('point 0')
+            # print(toTriangulate[0])
+            # np.append(toTriangulate, centroid)
+            try:
+                triangulation = trimesh.PointCloud(
+                    toTriangulate).convex_hull
+                part.mesh = trimesh.util.concatenate(
+                    part.mesh, triangulation)
+            except:
+                continue  # print('couldn\'t triangulate joint')
+        # for v in part.mesh.vertices:
+        #     v += translation/max(1.0, (vdistancesq(v, centroid)*500))
+
+        #     if(backlegOK or name != 'back' or label != 'leg')):
+        #         closest_point=trimesh.proximity.closest_point(
+        #             parts[partIndices[label]].mesh, part.mesh.vertices[indices])[0]
+        #         part.mesh.vertices[indices]=closest_point
+
+        # arm-back and arm-seat
+        # close holes in arm/seat by using part centroid and joint centroid, and move the joint verts to the max dist in the main direction of that vector, for seats maybe just down
+        # if(len(jointCenters['back']['seat']) > 0 and len(jointCenters['seat']['back']) > 0):
+
+        #                                             #[origin[0], destination[1], destination[2]]
+
+        # elif(len(jointCenters['leg']['seat']) == len(jointCenters['seat']['leg']) and len(jointCenters['leg']['seat']) == 2):
 
 
 def connectJointsIcp(parts):
@@ -517,36 +499,33 @@ def connectJointsIcp(parts):
             centroid = jointCentroid(part.mesh.vertices, indices)
             jointCenters[part.label][label].append(centroid)
     # print(jointCenters)
-    labels = ['seat', 'back', 'arm rest', 'leg']
-    for label in labels:
-        for label2 in labels:
-            if(len(jointCenters[label][label2]) == len(jointCenters[label2][label]) and len(jointCenters[label][label2]) > 2):
-                toMove = jointCenters[label][label2]
-                toMatch = jointCenters[label2][label]
-                toMove = matchPoints(
-                    toMove, toMatch)
-                print(jointCenters[label])
-                print("transformed")
-                a = toMove
-                b = toMatch
-                legTrans = trimesh.registration.icp(
-                    a, b, initial=trimesh.registration.procrustes(a, b, reflection=False)[0])[0]
-                # print(legTrans)
-                parts[partIndices[label]].mesh.apply_transform(legTrans)
-                # if(parts[partIndices[label]].mesh.centroid[1] > parts[partIndices[label2]].mesh.centroid[1]):
-                #     print("flipped")
-                #     legTrans = trimesh.transformations.scale_matrix(
-                #         -1, [0, 0, 0])
-                #     print(legTrans)
-                #     legTrans[0, 0] = 1
-                #     legTrans[2, 2] = 1
-                #     parts[partIndices[label]].mesh.apply_transform(legTrans)
-                legBounds = parts[partIndices[label]].mesh.bounds
-                seatBounds = parts[partIndices[label2]].mesh.bounds
-                maxlegy = max(legBounds[0][1], legBounds[1][1])
-                minseaty = min(seatBounds[0][1], seatBounds[1][1])
-                trans = [0, minseaty-maxlegy, 0]
-                parts[partIndices[label]].mesh.vertices += trans
+    if(len(jointCenters['leg']['seat']) == len(jointCenters['seat']['leg']) and len(jointCenters['leg']['seat']) > 2):
+        toMove = jointCenters['leg']['seat']
+        toMatch = jointCenters['seat']['leg']
+        toMove = matchPoints(
+            toMove, toMatch)
+        print(jointCenters['leg'])
+        print("transformed")
+        a = toMove
+        b = toMatch
+        legTrans = trimesh.registration.icp(
+            a, b, initial=trimesh.registration.procrustes(a, b, reflection=False)[0])[0]
+        # print(legTrans)
+        parts[partIndices['leg']].mesh.apply_transform(legTrans)
+        if(parts[partIndices['leg']].mesh.centroid[1] > parts[partIndices['seat']].mesh.centroid[1]):
+            print("flipped")
+            legTrans = trimesh.transformations.scale_matrix(
+                -1, [0, 0, 0])
+            print(legTrans)
+            legTrans[0, 0] = 1
+            legTrans[2, 2] = 1
+            parts[partIndices['leg']].mesh.apply_transform(legTrans)
+        legBounds = parts[partIndices['leg']].mesh.bounds
+        seatBounds = parts[partIndices['seat']].mesh.bounds
+        maxlegy = max(legBounds[0][1], legBounds[1][1])
+        minseaty = min(seatBounds[0][1], seatBounds[1][1])
+        trans = [0, minseaty-maxlegy, 0]
+        parts[partIndices['leg']].mesh.vertices += trans
 
 
 def connectJoints(parts):
