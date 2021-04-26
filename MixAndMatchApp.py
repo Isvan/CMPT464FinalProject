@@ -90,6 +90,8 @@ if __name__ == "__main__":
         newChairs.append(newChair)
         bar.update(len(newChairs))
 
+    bar.finish()
+
     # screenshot every new chair
     rotations = [
         (0, 0, 0),  # front
@@ -101,7 +103,7 @@ if __name__ == "__main__":
     ]
 
     depthScreenshots = []
-    for generatedChair in newChairs:
+    for generatedChair in progressbar(newChairs, "Making Screenshots"):
         perspectives = mps.captureDepth(
             generatedChair, rotations, imageWidth=224, imageHeight=224)
         depthScreenshots.append((generatedChair, perspectives))
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     chairsToDisplay = chairsToDisplay[:chairsToGenerateCount]
 
     # export the chairs as .objs
-    for i in range(len(chairsToDisplay)):
+    for i in progressbar(range(len(chairsToDisplay)), "Exporting generated chairs as .obj"):
         fileName = str(i) + '.obj'
         mpv.exportModelAsObj(chairsToDisplay[i], fileName)
 
