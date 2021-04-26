@@ -49,6 +49,7 @@ class Model:
         self.name = "default"
         self.datasetIndex = None
         self.datasetObjIndex = None
+        self.cachedScore = None
 
     def getPartByLabel(self, label):
         for part in self.parts:
@@ -110,6 +111,9 @@ def getCaptionForModel(model, index):
     else:
         captionText += "generated"
 
+    if model.cachedScore != None:
+        captionText += ' Score: '+str(model.cachedScore)
+
     caption = {'text': captionText,
                'location': pyrender.constants.TextAlign.TOP_CENTER,
                'font_name': 'fonts/Arial.ttf',
@@ -122,12 +126,15 @@ def getCaptionForModel(model, index):
     captionList.append(caption)
     return captionList
 
+def updateModelCaption(viewer, model, index):
+    viewer.viewer_flags['caption'] = getCaptionForModel(model, index)
+
 
 def setModelIndex(viewer, index):
     modelPartsViewer.viewerModelIndex = index
     modelPartsViewer.renderMode = 0
     model = modelPartsViewer.models[index]
-    viewer.viewer_flags['caption'] = getCaptionForModel(model, index)
+    updateModelCaption(viewer, model, index)
     setViewerSceneMeshes(viewer, model.parts)
 
 
@@ -333,6 +340,10 @@ def evalCurrentChair(viewer):
         currentModel, rotations, imageWidth=224, imageHeight=224, depthBegin=1, depthEnd=5)
 
     score = modelPartsViewer.scorer.score(perspectives)
+
+    # cache score and update caption
+    currentModel.cachedScore = score
+    updateModelCaption(viewer, currentModel, modelPartsViewer.viewerModelIndex)
 
     print("Evaluator Gave the Chair a score of " + str(score))
     pass
