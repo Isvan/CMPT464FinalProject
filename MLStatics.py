@@ -6,7 +6,7 @@ import random
 batch_size = 64
 img_height = 100
 img_width = 100
-training_epochs = 250
+training_epochs = 256
 
 # For now hardset seed, but in the future just set to some random number or current time
 seed = random.randint(0, 1000000000)

@@ -63,7 +63,6 @@ def load(dimension):
     imagesFront = np.array(imagesFront)
     imagesSide = np.array(imagesSide)
 
-    seed = 547
     np.random.seed(seed)
     np.random.shuffle(imagesTop)
     np.random.seed(seed)
