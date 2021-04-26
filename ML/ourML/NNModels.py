@@ -3,7 +3,8 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
-
+from tensorflow.keras.callbacks import LearningRateScheduler
+import numpy as np
 
 from MLStatics import *
 
@@ -49,24 +50,29 @@ def createConvolutionLayer(inputLayer):
 
     inputs = layers.Input(shape=(img_height, img_width, 1))
 
-    inputs = layers.experimental.preprocessing.Rescaling(
-        1./255)(inputLayer)
+    # inputs = layers.experimental.preprocessing.Rescaling(
+    #    1./255)(inputLayer)
 
     layer = layers.experimental.preprocessing.RandomTranslation(
-        0.1, 0.1)(inputs)
+        0.1, 0.1)(inputLayer)
 
     layer = layers.experimental.preprocessing.RandomRotation(0.1)(layer)
     layer = layers.experimental.preprocessing.RandomZoom(0.1)(layer)
 
-    layer = layers.Conv2D(32, 5, padding='same')(layer)
-    layer = layers.LeakyReLU(alpha=0.1)(layer)
-    layer = layers.MaxPooling2D(pool_size=(2, 2), padding='same')(layer)
-    layer = layers.Dropout(0.2)(layer)
-
     layer = layers.Conv2D(64, 5, padding='same')(layer)
     layer = layers.LeakyReLU(alpha=0.1)(layer)
     layer = layers.MaxPooling2D(pool_size=(2, 2), padding='same')(layer)
-    layer = layers.Dropout(0.2)(layer)
+    layer = layers.Dropout(0.4)(layer)
+
+    layer = layers.Conv2D(32, 5, padding='same')(layer)
+    layer = layers.LeakyReLU(alpha=0.1)(layer)
+    layer = layers.MaxPooling2D(pool_size=(2, 2), padding='same')(layer)
+    layer = layers.Dropout(0.4)(layer)
+
+    layer = layers.Conv2D(16, 5, padding='same')(layer)
+    layer = layers.LeakyReLU(alpha=0.1)(layer)
+    layer = layers.MaxPooling2D(pool_size=(2, 2), padding='same')(layer)
+    layer = layers.Dropout(0.4)(layer)
 
     return layer
 
@@ -90,9 +96,18 @@ def getMultiViewModel():
 
     concatted = layers.Flatten()(concatted)
 
-    dense = layers.Dense(512)(concatted)
+    dense = layers.Dense(1024)(concatted)
     dense = layers.LeakyReLU(alpha=0.1)(dense)
     dense = layers.Dropout(0.5)(dense)
+
+    dense = layers.Dense(512)(dense)
+    dense = layers.LeakyReLU(alpha=0.1)(dense)
+    dense = layers.Dropout(0.5)(dense)
+
+    dense = layers.Dense(256)(dense)
+    dense = layers.LeakyReLU(alpha=0.1)(dense)
+    dense = layers.Dropout(0.5)(dense)
+
     output = layers.Dense(2, activation='softmax')(dense)
 
     model = tf.keras.Model(inputs=[topViewInput, sideViewInput,
@@ -107,3 +122,13 @@ def getMultiViewModel():
                   steps_per_execution=10)
 
     return model
+
+# Guide on learning schedules
+# https://www.jeremyjordan.me/nn-learning-rate/
+
+
+def getLearningRateSchedule(initial_lr=1e-3, decay_factor=0.75, step_size=20):
+    def schedule(epoch):
+        return initial_lr * (decay_factor ** np.floor(epoch/step_size))
+
+    return LearningRateScheduler(schedule)

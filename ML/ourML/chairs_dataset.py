@@ -28,7 +28,7 @@ def load(dimension):
         length = len(os.listdir(folder)) // 3
         ls += length
 
-        for filename in progressbar(os.listdir(folder), "Configuring input data"):
+        for filename in progressbar(sorted(os.listdir(folder)), "Configuring input data"):
 
             view = int(filename.split(".")[0])
             view = view % 3

@@ -21,57 +21,86 @@ def progressbar(it, prefix="", size=60, file=sys.stdout):
     file.flush()
 
 
-def createOutputFolder(destination, origin, imageIndex, currentIndex):
-    if currentIndex % imagesPerChair != imageIndex:
-        return
+def stageData(folderName):
+    folderPath = os.path.join(".", folderName)
+    totalSize = len(os.listdir((folderPath)))
+    amountToPad = len(str(totalSize))
+    count = 1
 
-    shutil.copy(origin, destination)
+    for filename in progressbar((os.listdir(os.path.join(".", folderName))), "Staging data in " + folderName):
+        newStr = str(count)
+        numLen = len(newStr)
+        for i in range(amountToPad-numLen):
+            newStr = "0" + newStr
 
+        os.rename(os.path.join(folderPath, filename),
+                  os.path.join(folderPath, "s"+newStr+"."+filename.split(".")[1]))
 
-def processSubFolder(subFolder):
-    count = 0
-
-    for folderName in folderNames:
-        os.makedirs(os.path.join(outputFolder+folderName, subFolder))
-
-    for fileName in progressbar(os.listdir(os.path.join(src, subFolder)), "Trasnfering " + subFolder + " Files"):
-        indexCount = 0
-        for folderName in folderNames:
-            destination = os.path.join(
-                outputFolder+folderName, subFolder,  fileName)
-            origin = os.path.join(src, subFolder, fileName)
-            createOutputFolder(destination, origin,  indexCount, count)
-            indexCount += 1
         count += 1
 
 
-def processEvalData():
-    count = 0
-    subFolder = "Eval"
-    for folderName in folderNames:
-        os.makedirs(os.path.join(outputFolder+folderName+"-"+subFolder))
+def mergeData(folderName):
+    # Pad all non staged data
+    padData(folderName)
+    folderPath = os.path.join(".", folderName)
+    totalSize = len(os.listdir((folderPath)))
+    amountToPad = len(str(totalSize))
+    count = 1
+    # Now iterate over staged and non-staged data and merge them
+    for filename in progressbar((os.listdir(folderPath)), "Merging data in " + folderName):
+        newStr = str(count)
+        numLen = len(newStr)
+        for i in range(amountToPad-numLen):
+            newStr = "0" + newStr
 
-    for fileName in progressbar(os.listdir(os.path.join("../", "evaluate-chairs")), "Trasnfering " + subFolder + " Files"):
-        indexCount = 0
-        for folderName in folderNames:
-            destination = os.path.join(
-                outputFolder+folderName+"-"+subFolder,  fileName)
-            origin = os.path.join("../", "evaluate-chairs", fileName)
-            createOutputFolder(destination, origin,  indexCount, count)
-            indexCount += 1
+        os.rename(os.path.join(folderPath, filename),
+                  os.path.join(folderPath, newStr+"."+filename.split(".")[1]))
+
         count += 1
+
+
+def padData(folderName):
+    folderPath = os.path.join(".", folderName)
+    totalSize = len(os.listdir((folderPath)))
+    amountToPad = len(str(totalSize))
+    for filename in progressbar((os.listdir(folderPath)), "Padding data in " + folderName):
+        strNum = filename.split(".")[0]
+        if "s" in strNum:
+            continue
+        strType = filename.split(".")[1]
+        numLen = len(strNum)
+        newStr = strNum
+        for i in range(amountToPad-numLen):
+            newStr = "0" + newStr
+
+        os.rename(os.path.join(folderPath, filename),
+                  os.path.join(folderPath, newStr+"."+strType))
 
 
 src = "."
-outputFolder = os.path.join("ourChairData", "chairs-")
-folderNames = ["Front", "Side", "Top"]
 imagesPerChair = 3
 
-if(len(folderNames) != imagesPerChair):
-    print("MISMATCH BETWEEN FOLDERNAMES AND IMAGES PER CHAIR")
+tokens = sys.argv[1:]
 
-# processSubFolder("positive")
-# processSubFolder("negative")
-processEvalData()
+if len(tokens) <= 0:
+    print('-s : Stage Data to be merged in')
+    print('-m : Merge Data together')
+    print('-p : Pad Data')
+    quit()
 
-print("Done formating data!")
+if '-p' in tokens:
+    padData("negative")
+    padData("positive")
+    print("Done padding data you can now stage")
+    quit()
+
+if '-s' in tokens:
+    stageData("positive")
+    stageData("negative")
+    print("Done staging data you can now merge")
+    quit()
+
+if '-m' in tokens:
+    mergeData("negative")
+    mergeData("positive")
+    quit()

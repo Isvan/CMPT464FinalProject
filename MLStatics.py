@@ -3,10 +3,10 @@ import os
 import random
 
 # Global Static Settings that need to be synced for training/evaluating
-batch_size = 128
+batch_size = 64
 img_height = 100
 img_width = 100
-training_epochs = 500
+training_epochs = 250
 
 # For now hardset seed, but in the future just set to some random number or current time
 seed = random.randint(0, 1000000000)
