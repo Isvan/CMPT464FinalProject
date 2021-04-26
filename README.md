@@ -2,6 +2,11 @@
 
 # Technical details
 
+## How to install
+- Start a Virtual environment, you can run `python -m venv <path>`.
+For example, to create a venv in current directory, run `python -m venv .`
+- Install all dependencies using `pip install -r requirements.txt`. We are using python 3.8 for this project.
+
 ## Running
 
 - Run in the format of `python3 DatasetViewerApp.py n1 n2 n3...` to view/operate specified dataset meshes. E.g. `python3 DatasetViewerApp.py 2164 2165 2166 3452 5000`

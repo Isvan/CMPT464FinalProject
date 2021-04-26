@@ -78,13 +78,14 @@ if __name__ == "__main__":
     tryGenerateCount = 0
     bar = pbar.ProgressBar(max_value = chairPoolCount)
     while len(newChairs) < chairPoolCount:
-        newChair = mpv.generateChair(models)
+        newChair = mpv.generateChairFast(models)
         if mpv.modelListContains(newChairs, newChair):
             tryGenerateCount+=1
             if tryGenerateCount >= tryGenerateTimes:
                 break
             continue
         
+        mpv.weldChairParts(newChair)
         tryGenerateCount = 0
         newChairs.append(newChair)
         bar.update(len(newChairs))

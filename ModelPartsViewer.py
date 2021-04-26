@@ -204,10 +204,8 @@ def modelListContains(models, modelToCompare):
 
 # API END
 
-# Takes random pieces from collection and puts them together in a mesh, replacing parts of a random chair
-
-
-def generateChair(inputModels):
+# generate chair model without welding
+def generateChairFast(inputModels):
     # we use a random model to "fill" out with new parts
     randomModel = inputModels[pUtils.randomInt(0, len(inputModels))]
 
@@ -243,8 +241,17 @@ def generateChair(inputModels):
         #pUtils.scaleMeshAToB(newPart.mesh, part.mesh)
         #pUtils.translateMeshAToB(newPart.mesh, part.mesh)
         resultParts.append(newPart)
-    pUtils.connectJointsBeta(resultParts)
     return Model(resultParts)
+
+
+# Takes random pieces from collection and puts them together in a mesh, replacing parts of a random chair
+def generateChair(inputModels):
+    generatedChair = generateChairFast(inputModels)
+    weldChairParts(generatedChair)
+    return generatedChair
+
+def weldChairParts(chair):
+    pUtils.connectJointsBeta(chair.parts)
 
 
 def generateChairViewer(viewer):
