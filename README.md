@@ -33,7 +33,7 @@ For example, to create a venv in current directory, run `python -m venv .`
 - By default the app will save the split objs to disk in a new folder, this was done for easier loading but can cause hard storage usage to go to 2x the base set when ran on every chair
 - The first time a chair is used it trys to find connecting vertices based on distance from other meshes, these are then saved to disk, this slows down generation a bit. uploaded to google drive to avoid generation if wanted (generated with current distance threshold of 0.025 in getJoints)
 - If MixAndMatch is ran with a large amount of generated chairs(>100 for setC) compared to the input size there are some outliers that are bad but scored as good that may show up frequently near the top
--because of the above point the models are taken by generating 100 chairs from each set ( maximum n!/(n-3)! different chairs because results are deterministic)
+-because of the above point the models are taken by generating 100 chairs from each set (aborting early if no new combinations are chosen for a number of selections)
 
 ## Guides
 
