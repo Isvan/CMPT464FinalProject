@@ -2,25 +2,35 @@
 
 # Technical details
 
-## SETUP
-- Start a Virtual environment, you can run `python -m venv <path>`.
+## Setup
+- Start a Virtual environment, you can run `python -m venv <path>`. It is suggested that you use the name following virtual* pattern.
 For example, to create a venv in current directory, run `python -m venv .`
 - Install all dependencies using `pip install -r requirements.txt`. We are using python 3.8 for this project.
-- REQUIRED download current ML model to \ML\ourML\checkpoint\tripleView: https://drive.google.com/file/d/1txSLUsvMYqhLJafw8QQPWzpFRICXC0zy/view?usp=sharing
-- OPTIONAL download precalculated joints folder to \grass-master\Chair\models\joints: https://drive.google.com/drive/folders/1ZfgnWJKyDD8l28mHru_l7u5hr6zIbz5I?usp=sharing
+- [REQUIRED] Download the given dataset: https://github.com/FENGGENYU/PartNet_symh and let it reside at `dataset/Chair`. Make sure that it's called exactly "Chair" and has `ops/ syms/` etc. folders within.
+- [REQUIRED] Download current ML model to \ML\ourML\checkpoint\tripleView: https://drive.google.com/file/d/1txSLUsvMYqhLJafw8QQPWzpFRICXC0zy/view?usp=sharing
+- [OPTIONAL] Download precalculated joints folder to \grass-master\Chair\models\joints: https://drive.google.com/drive/folders/1ZfgnWJKyDD8l28mHru_l7u5hr6zIbz5I?usp=sharing
 
-## Running
+## Extra
+- Download final training data at https://drive.google.com/file/d/19w7n4ycMLvyRGky7xkI2eHFEkNHp4H6L/view?usp=sharing (not needed for execution)
+
+## Running the main App
+- To test on setA, setB and setC, make sure to run the app like this: `python3 MixAndMatchApp.py -setB -g 5 -p 50`. This will generate 50 chairs from set B and pick 5 best.
+- If you want to test it on a random collection, make sure to run the app like this: `python3 MixAndMatchApp.py -r 10 -g 5 -p 50`. This will generate 50 chairs from random 10 and pick 5 best.
+
+## Running the Viewer
 - Run in the format of `python3 DatasetViewerApp.py n1 n2 n3...` to view/operate specified dataset meshes. E.g. `python3 DatasetViewerApp.py 2164 2165 2166 3452 5000`
 - Run in the format of `python3 DatasetViewerApp.py -r X` to view/operate random X meshes from the dataset. E.g. `python3 DatasetViewerApp.py -r 10` will pick 10 random meshes and put them up.
-- Press "x" to take test depth screenshots of the chair present in the view. Saved to `screenshots/`
+- Run in the format of `python3 DatasetViewerApp.py -l` to run the latest input.
+- Run in the format of `python3 DatasetViewerApp.py -setA` to run one of the given data sets.
+- Press "a" and "d" to switch to prev/next models. Press "w" and "s" to look at particular parts of the model.
 - Press "g" to generate a new chair. It's added in the end of all current models.
+- Press "x" to take test depth screenshots of the chair present in the view. Saved to `screenshots/`
+- Press "e" to evaluate the chair in the view. The score will appear in the caption on the top.
+- Press "y" to save chair as "positive". Requires presence of `dataset/imageData/chairs-data/positive`
+- Press "n" to save chair as "negative". Requires presence of `dataset/imageData/chairs-data/negative`
 
-## Project Directory Structure
-
-- `dataset/Chair` is the dataset folder that you need to place there yourself. Make sure that it's called exactly "Chair" and has `ops/ syms/` etc. folders within
-- You can place your virtual environment into "virtual*" folder, where star means anything goes. All folders starting with "virtual" are ignored across the project.
 ## Special considerations
-- by default the app will save the split objs to disk in a new folder, this was done for easier loading but can cause hard storage usage to go to 2x the base set when ran on every chair
+- By default the app will save the split objs to disk in a new folder, this was done for easier loading but can cause hard storage usage to go to 2x the base set when ran on every chair
 - The first time a chair is used it trys to find connecting vertices based on distance from other meshes, these are then saved to disk, this slows down generation a bit. uploaded to google drive to avoid generation if wanted (generated with current distance threshold of 0.025 in getJoints)
 - If MixAndMatch is ran with a large amount of generated chairs(>100 for setC) compared to the input size there are some outliers that are bad but scored as good that may show up frequently near the top
 -because of the above point the models are taken by generating 100 chairs from each set ( maximum n!/(n-3)! different chairs because results are deterministic)
@@ -34,9 +44,9 @@ For example, to create a venv in current directory, run `python -m venv .`
 ## Roles
 
 - **Iavor**: ML classificator
-- **Maheep**: dataset parsing and data construction
-- **Greg**: mesh correspondence and deformation
-- **Vlad**: mesh correspondence and deformation
+- **Maheep**: Mix and Matcher / Overall support
+- **Greg**: Mix and Matcher
+- **Vlad**: App maintenance / Overall support
 
 ## Team information
 
@@ -52,10 +62,10 @@ For example, to create a venv in current directory, run `python -m venv .`
 
 ## General Project Idea
 
-- Pick random mesh and turn it into its corresponding parts.
-- Replace each corresponding part for some other part from the collection.
-- Process the new part (deform, grow, scale, etc.) to make sure the chair is connected and coherent.
-- Create several chairs like these and rank them by using our scoring mechanism.
+- Parse input meshes, initialize their joints and form collection of parts
+- Pick random parts from the collection and weld them together using their joints. Do this for N chairs.
+- Screenshot each chair and assign the score based on the depth screenshot. Sort by the score.
+- Export and display.
 
 ## Deliverables
 
@@ -70,6 +80,6 @@ For example, to create a venv in current directory, run `python -m venv .`
 
 - First working version of the project.
 
-### Refined MVP (April 21st) - In Progress
+### Refined MVP (April 21st) - Done
 
 - Decent general functionality. Proper scoring and mesh welding.
