@@ -483,7 +483,7 @@ def connectJointsBeta(parts):
                     part.mesh.vertices[indices] = legcp[0]
                 else:
                     for iter, v in enumerate(part.mesh.vertices[indices]):
-                        if(legcp[1][iter] < 0.1):
+                        if(legcp[1][iter] < 0.2):
                             v[1] = legcp[0][iter][1]
             else:
                 dists = part.mesh.vertices-closest_point
