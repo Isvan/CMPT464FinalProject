@@ -5,7 +5,9 @@
 ## Setup
 - Start a Virtual environment, you can run `python -m venv <path>`. It is suggested that you use the name following virtual* pattern.
 For example, to create a venv in current directory, run `python -m venv .`
+- If running this on Windows, you can launch the virtual environment using `.\Scripts\activate`.
 - Install all dependencies using `pip install -r requirements.txt`. We are using python 3.8 for this project.
+- If you run into any "Module not found" erros while running the code below, consider using `.\Scripts\python` alias instead of simply `python`. This is due some Windows system path incompatibilty.  
 - [REQUIRED] Download the given dataset: https://github.com/FENGGENYU/PartNet_symh and let it reside at `dataset/Chair`. Make sure that it's called exactly "Chair" and has `ops/ syms/` etc. folders within.
 - [REQUIRED] Download current ML model to \ML\ourML\checkpoint\tripleView: https://drive.google.com/file/d/1txSLUsvMYqhLJafw8QQPWzpFRICXC0zy/view?usp=sharing
 - [OPTIONAL] Download precalculated joints folder to \grass-master\Chair\models\joints: https://drive.google.com/drive/folders/1ZfgnWJKyDD8l28mHru_l7u5hr6zIbz5I?usp=sharing
