@@ -16,6 +16,7 @@ For example, to create a venv in current directory, run `python -m venv .`
 ## Running the main App
 - To test on setA, setB and setC, make sure to run the app like this: `python3 MixAndMatchApp.py -setB -g 5 -p 50`. This will generate 50 chairs from set B and pick 5 best.
 - If you want to test it on a random collection, make sure to run the app like this: `python3 MixAndMatchApp.py -r 10 -g 5 -p 50`. This will generate 50 chairs from random 10 and pick 5 best.
+- Not that the program exports generated in `.obj` format in `export_objs/` folder according to their index. 5 models would have indices 0, 1, 2, 3, 4 and they would correspond to `0.obj`, `1.obj`, `2.obj`, `3.obj`, `4.obj`.
 
 ## Running the Viewer
 - Run in the format of `python3 DatasetViewerApp.py n1 n2 n3...` to view/operate specified dataset meshes. E.g. `python3 DatasetViewerApp.py 2164 2165 2166 3452 5000`
